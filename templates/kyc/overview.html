@@ -1,0 +1,73 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}KYC Verification | MachineAuction{% endblock %}
+
+{% block content %}
+<div class="container py-5" style="max-width:760px">
+  <h4 class="fw-bold mb-4"><i class="bi bi-shield-check me-2 text-gold"></i>Identity Verification (KYC)</h4>
+
+  {% if user.kyc_status == 'verified' %}
+  <div class="alert alert-success mb-4">
+    <i class="bi bi-patch-check-fill me-2"></i>
+    <strong>Identity Verified!</strong> You have full access to all platform features.
+  </div>
+  {% elif user.kyc_status == 'submitted' %}
+  <div class="alert alert-info mb-4">
+    <i class="bi bi-hourglass-split me-2"></i>
+    <strong>Under Review.</strong> Your documents are being reviewed. We'll notify you within 24–48 hours.
+  </div>
+  {% elif user.kyc_status == 'rejected' %}
+  <div class="alert alert-danger mb-4">
+    <i class="bi bi-x-circle-fill me-2"></i>
+    <strong>Verification Failed.</strong> Please re-submit with correct documents.
+  </div>
+  {% else %}
+  <div class="alert alert-warning mb-4">
+    <i class="bi bi-exclamation-triangle me-2"></i>
+    <strong>KYC Required</strong> for high-value bids over GHS {{ kyc_threshold|default:'5,000' }}.
+    <a href="{% url 'kyc_submit' %}" class="alert-link ms-2">Verify Now →</a>
+  </div>
+  {% endif %}
+
+  <!-- Status Steps -->
+  <div class="gh-card p-4 mb-4">
+    <h6 class="fw-bold mb-4">Verification Status</h6>
+    <div class="d-flex flex-column gap-3">
+      {% for step_label, step_done in steps %}
+      <div class="d-flex align-items-center gap-3">
+        <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
+             style="width:32px;height:32px;{% if step_done %}background:var(--gh-green);color:#fff{% else %}background:#e2e8f0;color:#94a3b8{% endif %}">
+          {% if step_done %}<i class="bi bi-check"></i>{% else %}<i class="bi bi-circle"></i>{% endif %}
+        </div>
+        <span class="{% if step_done %}fw-semibold{% else %}text-muted{% endif %}">{{ step_label }}</span>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Submitted documents -->
+  {% if documents %}
+  <div class="gh-card p-4 mb-4">
+    <h6 class="fw-bold mb-3">Submitted Documents</h6>
+    {% for doc in documents %}
+    <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+      <div>
+        <div class="fw-semibold small">{{ doc.get_document_type_display }}</div>
+        <div class="text-muted small">Submitted {{ doc.submitted_at|date:"M d, Y" }}</div>
+      </div>
+      <span class="badge {% if doc.status == 'verified' %}bg-success{% elif doc.status == 'rejected' %}bg-danger{% elif doc.status == 'under_review' %}bg-warning text-dark{% else %}bg-secondary{% endif %}">
+        {{ doc.get_status_display }}
+      </span>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {% if user.kyc_status not in 'verified,submitted' %}
+  <a href="{% url 'kyc_submit' %}" class="btn gh-btn-sell">
+    <i class="bi bi-upload me-2"></i>Submit KYC Documents
+  </a>
+  {% endif %}
+</div>
+{% endblock %}

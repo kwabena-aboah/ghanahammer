@@ -1,0 +1,331 @@
+{% extends "base/base.html" %}
+{% load static auction_filters %}
+
+{% block title %}{% if auction %}Edit Auction{% else %}Create New Auction{% endif %} | MachineAuction{% endblock %}
+
+{% block extra_css %}
+<style>
+.gh-form-section { background: #fff; border: 1px solid var(--gh-border); border-radius: var(--gh-radius); padding: 24px; margin-bottom: 20px; }
+.gh-form-section-title { font-weight: 700; font-size: 15px; color: var(--gh-navy); margin-bottom: 18px; padding-bottom: 10px; border-bottom: 1px solid var(--gh-border); }
+.gh-image-preview { width: 100%; height: 160px; object-fit: cover; border-radius: 8px; display: none; }
+.gh-ai-suggestion { background: rgba(240,165,0,.08); border: 1px solid rgba(240,165,0,.3); border-radius: 8px; padding: 12px 16px; font-size: 13px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-xl py-4">
+  <div class="row justify-content-center">
+    <div class="col-lg-10">
+
+      <div class="d-flex align-items-center justify-content-between mb-4">
+        <h4 class="fw-bold mb-0">
+          <i class="bi bi-plus-circle me-2 text-gold"></i>
+          {% if auction %}Edit Listing{% else %}Create New Auction{% endif %}
+        </h4>
+        <!-- Bulk Upload Link -->
+        <a href="{% url 'bulk_import' %}" class="btn btn-outline-secondary btn-sm">
+          <i class="bi bi-upload me-1"></i>Bulk Import (CSV/Excel)
+        </a>
+      </div>
+
+      <form method="post" enctype="multipart/form-data" id="auction-form">
+        {% csrf_token %}
+
+        <!-- ── Basic Info ─────────────────────────────────────── -->
+        <div class="gh-form-section">
+          <div class="gh-form-section-title"><i class="bi bi-info-circle me-2"></i>Basic Information</div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Title <span class="text-danger">*</span></label>
+            <input type="text" name="title" class="form-control" id="field-title"
+                   value="{{ form.title.value|default:'' }}" placeholder="e.g. 2019 Toyota Corolla — Accra" required>
+            <div class="form-text">Be specific and descriptive for better search visibility</div>
+          </div>
+
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Category <span class="text-danger">*</span></label>
+              <select name="category" class="form-select" id="field-category" required>
+                <option value="">Select category…</option>
+                {% for cat in categories %}
+                <option value="{{ cat.id }}" {% if form.category.value == cat.id|stringformat:'s' %}selected{% endif %}>
+                  {{ cat.name }}
+                </option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Condition</label>
+              <select name="condition" class="form-select" id="field-condition">
+                <option value="new" {% if form.condition.value == 'new' %}selected{% endif %}>New</option>
+                <option value="used" {% if form.condition.value == 'used' %}selected{% endif %}>Used</option>
+                <option value="refurbished" {% if form.condition.value == 'refurbished' %}selected{% endif %}>Refurbished</option>
+                <option value="for_parts" {% if form.condition.value == 'for_parts' %}selected{% endif %}>For Parts / Not Working</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="mt-3">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <label class="form-label fw-semibold mb-0">Description <span class="text-danger">*</span></label>
+              <button type="button" class="btn btn-sm btn-outline-secondary" id="btn-ai-description">
+                <i class="bi bi-magic me-1"></i>AI Generate
+              </button>
+            </div>
+            <textarea name="description" class="form-control" id="field-description" rows="6"
+                      placeholder="Describe the item in detail…" required>{{ form.description.value|default:'' }}</textarea>
+          </div>
+        </div>
+
+        <!-- ── Pricing ────────────────────────────────────────── -->
+        <div class="gh-form-section">
+          <div class="gh-form-section-title"><i class="bi bi-currency-dollar me-2"></i>Pricing</div>
+
+          <!-- AI Price Suggestion -->
+          <div id="ai-suggestion-box" class="gh-ai-suggestion mb-4 d-none">
+            <div class="fw-semibold mb-2"><i class="bi bi-robot me-1"></i>AI Price Recommendation</div>
+            <div class="row g-3">
+              <div class="col-4 text-center">
+                <div class="text-muted small">Starting Price</div>
+                <div class="fw-bold text-gold" id="ai-start-price">—</div>
+              </div>
+              <div class="col-4 text-center">
+                <div class="text-muted small">Reserve Price</div>
+                <div class="fw-bold" id="ai-reserve-price">—</div>
+              </div>
+              <div class="col-4 text-center">
+                <div class="text-muted small">Buy Now Price</div>
+                <div class="fw-bold text-success" id="ai-buy-now-price">—</div>
+              </div>
+            </div>
+            <div class="mt-2 d-flex gap-2">
+              <button type="button" class="btn btn-sm gh-btn-sell" id="btn-apply-ai-prices">Apply All</button>
+              <span class="text-muted small align-self-center" id="ai-confidence"></span>
+              <span class="text-muted small align-self-center ms-auto" id="ai-sample-size"></span>
+            </div>
+          </div>
+
+          <div class="row g-3 mb-3">
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">Starting Price (GHS) <span class="text-danger">*</span></label>
+              <div class="input-group">
+                <span class="input-group-text">GHS</span>
+                <input type="number" name="starting_price" class="form-control" id="field-starting-price"
+                       value="{{ form.starting_price.value|default:'' }}" min="1" step="0.01" required>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">Reserve Price (GHS)</label>
+              <div class="input-group">
+                <span class="input-group-text">GHS</span>
+                <input type="number" name="reserve_price" class="form-control" id="field-reserve-price"
+                       value="{{ form.reserve_price.value|default:'' }}" min="0" step="0.01">
+              </div>
+              <div class="form-text">Minimum acceptable price. Hidden from buyers.</div>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">Buy Now Price (GHS)</label>
+              <div class="input-group">
+                <span class="input-group-text">GHS</span>
+                <input type="number" name="buy_now_price" class="form-control" id="field-buy-now-price"
+                       value="{{ form.buy_now_price.value|default:'' }}" min="0" step="0.01">
+              </div>
+              <div class="form-text">Optional. Buyers can purchase immediately at this price.</div>
+            </div>
+          </div>
+
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Auction Type</label>
+              <select name="auction_type" class="form-select">
+                <option value="standard">Standard Auction</option>
+                <option value="reserve">Reserve Price Auction</option>
+                <option value="buy_now">Auction + Buy Now</option>
+                <option value="live">Live Video Auction</option>
+                <option value="sealed">Sealed Bid</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Bid Increment (GHS)</label>
+              <div class="input-group">
+                <span class="input-group-text">GHS</span>
+                <input type="number" name="bid_increment" class="form-control"
+                       value="{{ form.bid_increment.value|default:'10' }}" min="1" step="1">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Scheduling ─────────────────────────────────────── -->
+        <div class="gh-form-section">
+          <div class="gh-form-section-title"><i class="bi bi-calendar me-2"></i>Auction Schedule</div>
+          <div class="row g-3">
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">VIP Preview Start</label>
+              <input type="datetime-local" name="preview_start" class="form-control"
+                     value="{{ form.preview_start.value|default:'' }}">
+              <div class="form-text">Gold & Platinum members see listing early</div>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">Auction Start <span class="text-danger">*</span></label>
+              <input type="datetime-local" name="start_time" class="form-control" required
+                     value="{{ form.start_time.value|default:'' }}">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">Auction End <span class="text-danger">*</span></label>
+              <input type="datetime-local" name="end_time" class="form-control" required
+                     value="{{ form.end_time.value|default:'' }}">
+            </div>
+          </div>
+
+          <!-- Quick Duration Presets -->
+          <div class="mt-3">
+            <label class="form-label text-muted small">Quick Duration:</label>
+            <div class="d-flex gap-2 flex-wrap">
+              {% for d in '1,3,5,7,10,14'|split:',' %}
+              <button type="button" class="btn btn-sm btn-outline-secondary duration-preset" data-days="{{ d }}">
+                {{ d }} day{{ d|pluralize }}
+              </button>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Images ─────────────────────────────────────────── -->
+        <div class="gh-form-section">
+          <div class="gh-form-section-title"><i class="bi bi-images me-2"></i>Images (Max 20)</div>
+          <div class="row g-3">
+            {% for i in '1234567890'|make_list %}
+            <div class="col-6 col-md-3">
+              <label class="form-label small">Image {{ forloop.counter }}</label>
+              <input type="file" name="images" class="form-control form-control-sm gh-img-upload"
+                     accept="image/*" data-preview="preview-{{ forloop.counter }}"
+                     onchange="checkFileSize(this, 5)">
+              <img id="preview-{{ forloop.counter }}" class="gh-image-preview mt-2 w-100">
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+
+        <!-- ── Location & Shipping ───────────────────────────── -->
+        <div class="gh-form-section">
+          <div class="gh-form-section-title"><i class="bi bi-geo-alt me-2"></i>Location & Shipping</div>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Item Location</label>
+              <input type="text" name="location" class="form-control" id="field-location"
+                     value="{{ form.location.value|default:'' }}" placeholder="e.g. Accra, Kumasi…">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Region</label>
+              <select name="region" class="form-select">
+                <option value="">Select Region</option>
+                {% for region in regions %}
+                <option value="{{ region }}">{{ region }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+          <div class="row g-3 mt-1">
+            <div class="col-md-4">
+              <div class="form-check mt-2">
+                <input class="form-check-input" type="checkbox" name="shipping_available" id="shipping-available"
+                       {% if form.shipping_available.value %}checked{% endif %}>
+                <label class="form-check-label" for="shipping-available">Shipping Available</label>
+              </div>
+            </div>
+            <div class="col-md-4" id="shipping-cost-field">
+              <label class="form-label fw-semibold small">Shipping Cost (GHS)</label>
+              <input type="number" name="shipping_cost" class="form-control form-control-sm"
+                     value="{{ form.shipping_cost.value|default:'' }}" step="0.01">
+            </div>
+            <div class="col-md-4">
+              <div class="form-check mt-2">
+                <input class="form-check-input" type="checkbox" name="pickup_only" id="pickup-only"
+                       {% if form.pickup_only.value %}checked{% endif %}>
+                <label class="form-check-label" for="pickup-only">Pickup Only</label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Submit ─────────────────────────────────────────── -->
+        <div class="d-flex gap-3">
+          <button type="submit" name="action" value="publish" class="btn gh-btn-sell px-5">
+            <i class="bi bi-check-circle me-2"></i>
+            {% if auction %}Save Changes{% else %}Publish Auction{% endif %}
+          </button>
+          <button type="submit" name="action" value="draft" class="btn btn-outline-secondary px-4">
+            <i class="bi bi-save me-2"></i>Save as Draft
+          </button>
+          <a href="{% url 'dashboard_my_auctions' %}" class="btn btn-link text-muted">Cancel</a>
+        </div>
+
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Duration presets
+document.querySelectorAll('.duration-preset').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const days = parseInt(btn.dataset.days);
+    const start = document.querySelector('[name=start_time]').value;
+    if (start) {
+      const startDate = new Date(start);
+      const endDate = new Date(startDate.getTime() + days * 86400000);
+      const pad = n => String(n).padStart(2, '0');
+      const fmt = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+      document.querySelector('[name=end_time]').value = fmt(endDate);
+    }
+    document.querySelectorAll('.duration-preset').forEach(b => b.classList.remove('active', 'gh-btn-sell'));
+    btn.classList.add('active', 'gh-btn-sell');
+  });
+});
+
+// AI Description
+document.getElementById('btn-ai-description')?.addEventListener('click', async () => {
+  const title = document.getElementById('field-title').value;
+  const catEl = document.getElementById('field-category');
+  const catName = catEl.options[catEl.selectedIndex]?.text || '';
+  const condition = document.getElementById('field-condition').value;
+  const location = document.getElementById('field-location').value;
+  if (!title || !catName) { alert('Enter title and select category first.'); return; }
+  const btn = document.getElementById('btn-ai-description');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+  const desc = await GH.fetchAIDescription(title, catName, condition, location, '');
+  if (desc) document.getElementById('field-description').value = desc;
+  btn.disabled = false; btn.innerHTML = '<i class="bi bi-magic me-1"></i>AI Generate';
+});
+
+// AI Price Recommendation
+async function loadAIPrices() {
+  const categoryId = document.getElementById('field-category').value;
+  const title = document.getElementById('field-title').value;
+  const condition = document.getElementById('field-condition').value;
+  if (!categoryId || !title) return;
+  const result = await GH.fetchAIPriceRecommendation(categoryId, title, condition);
+  if (result.success) {
+    const r = result.recommendations;
+    document.getElementById('ai-start-price').textContent = 'GHS ' + parseFloat(r.suggested_start_price).toLocaleString();
+    document.getElementById('ai-reserve-price').textContent = 'GHS ' + parseFloat(r.suggested_reserve_price).toLocaleString();
+    document.getElementById('ai-buy-now-price').textContent = 'GHS ' + parseFloat(r.suggested_buy_now_price).toLocaleString();
+    document.getElementById('ai-confidence').textContent = `Confidence: ${r.confidence}`;
+    document.getElementById('ai-sample-size').textContent = `Based on ${r.sample_size} sales`;
+    document.getElementById('ai-suggestion-box').classList.remove('d-none');
+
+    document.getElementById('btn-apply-ai-prices').onclick = () => {
+      document.getElementById('field-starting-price').value = parseFloat(r.suggested_start_price).toFixed(2);
+      document.getElementById('field-reserve-price').value = parseFloat(r.suggested_reserve_price).toFixed(2);
+      document.getElementById('field-buy-now-price').value = parseFloat(r.suggested_buy_now_price).toFixed(2);
+    };
+  }
+}
+
+document.getElementById('field-category')?.addEventListener('change', loadAIPrices);
+document.getElementById('field-condition')?.addEventListener('change', loadAIPrices);
+</script>
+{% endblock %}

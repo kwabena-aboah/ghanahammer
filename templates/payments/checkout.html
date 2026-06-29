@@ -1,0 +1,145 @@
+{% extends "base/base.html" %}
+{% load static humanize %}
+
+{% block title %}Checkout — {{ auction.title }} | MachineAuction{% endblock %}
+
+{% block content %}
+<div class="container py-5" style="max-width:680px">
+  <div class="gh-card p-4 p-md-5">
+
+    <h4 class="fw-bold mb-1">Complete Your Payment</h4>
+    <p class="text-muted small mb-4">
+      Winning lot <strong>{{ auction.lot_number }}</strong> — {{ auction.title }}
+    </p>
+
+    <!-- Order summary -->
+    <div class="rounded p-3 mb-4" style="background:var(--gh-bg)">
+      <div class="d-flex justify-content-between mb-2">
+        <span class="text-muted small">Winning Bid</span>
+        <span class="fw-semibold">GHS {{ amount|intcomma }}</span>
+      </div>
+      <div class="d-flex justify-content-between mb-2">
+        <span class="text-muted small">Platform Fee (5%)</span>
+        <span class="text-muted small">GHS {{ amount|floatformat:2 }}</span>
+      </div>
+      <div class="d-flex justify-content-between mb-2">
+        <span class="text-muted small">Escrow Protection</span>
+        <span class="text-success small"><i class="bi bi-shield-check me-1"></i>Included</span>
+      </div>
+      <hr class="my-2">
+      <div class="d-flex justify-content-between">
+        <span class="fw-bold">Total Due</span>
+        <span class="fw-bold fs-5 text-gold">GHS {{ amount|intcomma }}</span>
+      </div>
+    </div>
+
+    <!-- Escrow info banner -->
+    <div class="alert alert-info mb-4">
+      <i class="bi bi-info-circle-fill me-2"></i>
+      <strong>Escrow Protected:</strong> Your payment is held securely until you confirm receipt of the item. You have {{ escrow_release_days|default:7 }} days to confirm.
+    </div>
+
+    <!-- Payment method form -->
+    <form method="post" id="checkout-form">
+      {% csrf_token %}
+
+      <div class="mb-4">
+        <label class="form-label fw-semibold">Payment Method</label>
+        <div class="row g-2">
+          <div class="col-12">
+            <label class="d-block border rounded p-3 cursor-pointer payment-option" style="cursor:pointer">
+              <input type="radio" name="channel_type" value="card" class="me-2" checked
+                     onchange="showPaymentFields(this.value)">
+              <i class="bi bi-credit-card me-1"></i>
+              <strong>Card</strong> — Visa, Mastercard, Credit Card
+            </label>
+          </div>
+          <div class="col-12">
+            <label class="d-block border rounded p-3 cursor-pointer payment-option" style="cursor:pointer">
+              <input type="radio" name="channel_type" value="mobile_money" class="me-2"
+                     onchange="showPaymentFields(this.value)">
+              <i class="bi bi-phone me-1"></i>
+              <strong>Mobile Money</strong> — MTN MoMo, Telecel Cash, AirtelTigo
+            </label>
+          </div>
+          <div class="col-12">
+            <label class="d-block border rounded p-3 cursor-pointer payment-option" style="cursor:pointer">
+              <input type="radio" name="channel_type" value="bank_transfer" class="me-2"
+                     onchange="showPaymentFields(this.value)">
+              <i class="bi bi-bank me-1"></i>
+              <strong>Bank Transfer</strong> — Receive dedicated account number
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- MoMo fields -->
+      <div id="momo-fields" class="d-none mb-4">
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Mobile Network</label>
+          <select name="momo_network" class="form-select">
+            <option value="mtn_momo">📱 MTN Mobile Money</option>
+            <option value="telecel_cash">📱 Telecel Cash</option>
+            <option value="airteltigo_money">📱 AirtelTigo Money</option>
+          </select>
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">MoMo Number</label>
+          <div class="input-group">
+            <span class="input-group-text">+233</span>
+            <input type="tel" name="momo_number" class="form-control"
+                   placeholder="XX XXX XXXX" pattern="[0-9]{9,10}">
+          </div>
+          <div class="form-text">You will receive a USSD prompt to approve the payment.</div>
+        </div>
+      </div>
+
+      <button type="submit" class="btn gh-btn-sell w-100 py-3" id="pay-btn">
+        <i class="bi bi-lock-fill me-2"></i>
+        Pay GHS {{ amount|intcomma }} Securely
+      </button>
+
+      <div class="text-center mt-3">
+        <img src="{% static 'images/paystack-badge.png' %}" alt="Secured by Paystack" height="28"
+             onerror="this.style.display='none'">
+        <div class="text-muted small mt-1">
+          <i class="bi bi-shield-lock me-1"></i>256-bit SSL encryption · Powered by Paystack
+        </div>
+      </div>
+    </form>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function showPaymentFields(channel) {
+  document.getElementById('momo-fields').classList.toggle('d-none', channel !== 'mobile_money');
+  const payBtn = document.getElementById('pay-btn');
+  if (channel === 'bank_transfer') {
+    payBtn.innerHTML = '<i class="bi bi-bank me-2"></i>Get Bank Account Details';
+  } else if (channel === 'mobile_money') {
+    payBtn.innerHTML = '<i class="bi bi-phone me-2"></i>Pay via Mobile Money';
+  } else {
+    payBtn.innerHTML = '<i class="bi bi-lock-fill me-2"></i>Pay GHS {{ amount|intcomma }} Securely';
+  }
+}
+
+// Highlight selected payment method
+document.querySelectorAll('.payment-option').forEach(label => {
+  label.querySelector('input').addEventListener('change', function() {
+    document.querySelectorAll('.payment-option').forEach(l => l.style.borderColor = '');
+    label.style.borderColor = 'var(--gh-gold)';
+    label.style.background = 'rgba(240,165,0,.05)';
+  });
+});
+
+// Prevent double submit
+document.getElementById('checkout-form').addEventListener('submit', function() {
+  const btn = document.getElementById('pay-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Processing…';
+});
+</script>
+{% endblock %}

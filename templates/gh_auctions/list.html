@@ -1,0 +1,262 @@
+{% extends "base/base.html" %}
+{% load static humanize %}
+
+{% block title %}
+{% if current_filters.q %}Results for "{{ current_filters.q }}"{% else %}Browse Auctions{% endif %} | MachineAuction
+{% endblock %}
+
+{% block content %}
+<div class="container-xl py-4">
+
+  <!-- Mobile search -->
+  <div class="d-lg-none mb-3">
+    <form action="{% url 'auction_list' %}" method="get" class="d-flex gap-2">
+      <input type="text" name="q" value="{{ current_filters.q }}" class="form-control" placeholder="Search auctions…">
+      <button class="btn gh-btn-sell" type="submit"><i class="bi bi-search"></i></button>
+    </form>
+  </div>
+
+  <div class="row g-4">
+
+    <!-- ─── Filter Sidebar ────────────────────────────────────── -->
+    <div class="col-lg-3 d-none d-lg-block">
+      <form action="{% url 'auction_list' %}" method="get" id="filter-form">
+
+        <!-- Preserve search query -->
+        {% if current_filters.q %}
+        <input type="hidden" name="q" value="{{ current_filters.q }}">
+        {% endif %}
+
+        <div class="gh-filter-panel mb-3">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h6 class="fw-bold mb-0">Filters</h6>
+            <a href="{% url 'auction_list' %}{% if current_filters.q %}?q={{ current_filters.q }}{% endif %}" class="small text-muted">Clear all</a>
+          </div>
+
+          <!-- Category -->
+          <div class="mb-4">
+            <div class="gh-filter-title">Category</div>
+            {% for cat in categories %}
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="category" id="cat-{{ cat.slug }}"
+                     value="{{ cat.slug }}" {% if current_filters.category == cat.slug %}checked{% endif %}
+                     onchange="document.getElementById('filter-form').submit()">
+              <label class="form-check-label small" for="cat-{{ cat.slug }}">{{ cat.name }}</label>
+            </div>
+            {% endfor %}
+          </div>
+
+          <!-- Auction Type -->
+          <div class="mb-4">
+            <div class="gh-filter-title">Auction Type</div>
+            {% for value, label in type_choices %}
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="type" id="type-{{ value }}"
+                     value="{{ value }}" {% if current_filters.type == value %}checked{% endif %}
+                     onchange="document.getElementById('filter-form').submit()">
+              <label class="form-check-label small" for="type-{{ value }}">{{ label }}</label>
+            </div>
+            {% endfor %}
+          </div>
+
+          <!-- Price Range -->
+          <div class="mb-4">
+            <div class="gh-filter-title">Price Range (GHS)</div>
+            <div class="row g-2">
+              <div class="col-6">
+                <input type="number" name="min_price" class="form-control form-control-sm"
+                       placeholder="Min" value="{{ current_filters.min_price }}">
+              </div>
+              <div class="col-6">
+                <input type="number" name="max_price" class="form-control form-control-sm"
+                       placeholder="Max" value="{{ current_filters.max_price }}">
+              </div>
+            </div>
+          </div>
+
+          <!-- Condition -->
+          <div class="mb-4">
+            <div class="gh-filter-title">Condition</div>
+            {% for value, label in condition_choices %}
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="condition" id="cond-{{ value }}"
+                     value="{{ value }}" {% if current_filters.condition == value %}checked{% endif %}
+                     onchange="document.getElementById('filter-form').submit()">
+              <label class="form-check-label small" for="cond-{{ value }}">{{ label }}</label>
+            </div>
+            {% endfor %}
+          </div>
+
+          <!-- Location -->
+          <div class="mb-4">
+            <div class="gh-filter-title">Location</div>
+            <input type="text" name="location" class="form-control form-control-sm"
+                   placeholder="City or region…" value="{{ current_filters.location }}">
+          </div>
+
+          <!-- Seller type -->
+          <div class="mb-4">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" name="verified_seller" id="verified-only"
+                     {% if request.GET.verified_seller %}checked{% endif %}
+                     onchange="document.getElementById('filter-form').submit()">
+              <label class="form-check-label small" for="verified-only">
+                <i class="bi bi-patch-check-fill text-success me-1"></i>Verified Sellers Only
+              </label>
+            </div>
+          </div>
+
+          <button type="submit" class="btn gh-btn-sell w-100 btn-sm">Apply Filters</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- ─── Listing Grid ──────────────────────────────────────── -->
+    <div class="col-lg-9">
+
+      <!-- Results header -->
+      <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+        <div>
+          <span class="fw-semibold">{{ total_count|intcomma }} auction{{ total_count|pluralize }}</span>
+          {% if current_filters.q %}<span class="text-muted"> for "{{ current_filters.q }}"</span>{% endif %}
+          {% if current_filters.category %}<span class="badge bg-secondary ms-2">{{ current_filters.category }}</span>{% endif %}
+        </div>
+        <div class="d-flex align-items-center gap-2">
+          <!-- Sort -->
+          <select class="form-select form-select-sm" style="width:auto"
+                  onchange="window.location.href=updateUrlParam('sort', this.value)">
+            <option value="featured" {% if current_filters.sort == 'featured' %}selected{% endif %}>Featured First</option>
+            <option value="ending_soon" {% if current_filters.sort == 'ending_soon' %}selected{% endif %}>Ending Soon</option>
+            <option value="newest" {% if current_filters.sort == 'newest' %}selected{% endif %}>Newest First</option>
+            <option value="price_low" {% if current_filters.sort == 'price_low' %}selected{% endif %}>Price: Low to High</option>
+            <option value="price_high" {% if current_filters.sort == 'price_high' %}selected{% endif %}>Price: High to Low</option>
+            <option value="most_bids" {% if current_filters.sort == 'most_bids' %}selected{% endif %}>Most Bids</option>
+            <option value="most_viewed" {% if current_filters.sort == 'most_viewed' %}selected{% endif %}>Most Viewed</option>
+          </select>
+          <!-- View toggle -->
+          <div class="btn-group btn-group-sm">
+            <button class="btn btn-outline-secondary active" id="grid-btn" onclick="setView('grid')">
+              <i class="bi bi-grid-3x3-gap"></i>
+            </button>
+            <button class="btn btn-outline-secondary" id="list-btn" onclick="setView('list')">
+              <i class="bi bi-list-ul"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Auction grid -->
+      {% if auctions %}
+      <div class="row g-3" id="auction-grid">
+        {% for auction in auctions %}
+        <div class="col-6 col-md-4 auction-grid-item">
+          {% include "auctions/partials/auction_card.html" %}
+        </div>
+        {% endfor %}
+      </div>
+
+      <!-- Pagination -->
+      {% if page.has_other_pages %}
+      <nav class="mt-4">
+        <ul class="pagination justify-content-center">
+          {% if page.has_previous %}
+          <li class="page-item">
+            <a class="page-link" href="?{% for k, v in request.GET.items %}{% if k != 'page' %}{{ k }}={{ v }}&{% endif %}{% endfor %}page={{ page.previous_page_number }}">
+              <i class="bi bi-chevron-left"></i>
+            </a>
+          </li>
+          {% endif %}
+
+          {% for num in page.paginator.page_range %}
+          {% if page.number == num %}
+          <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+          {% elif num > page.number|add:'-3' and num < page.number|add:'3' %}
+          <li class="page-item">
+            <a class="page-link" href="?{% for k, v in request.GET.items %}{% if k != 'page' %}{{ k }}={{ v }}&{% endif %}{% endfor %}page={{ num }}">{{ num }}</a>
+          </li>
+          {% endif %}
+          {% endfor %}
+
+          {% if page.has_next %}
+          <li class="page-item">
+            <a class="page-link" href="?{% for k, v in request.GET.items %}{% if k != 'page' %}{{ k }}={{ v }}&{% endif %}{% endfor %}page={{ page.next_page_number }}">
+              <i class="bi bi-chevron-right"></i>
+            </a>
+          </li>
+          {% endif %}
+        </ul>
+      </nav>
+      {% endif %}
+
+      {% else %}
+      <!-- Empty state -->
+      <div class="text-center py-5">
+        <i class="bi bi-search fs-1 text-muted d-block mb-3"></i>
+        <h5 class="fw-bold">No auctions found</h5>
+        <p class="text-muted">
+          {% if current_filters.q %}
+          No results for "{{ current_filters.q }}". Try a different keyword.
+          {% else %}
+          No auctions match your filters. Try adjusting your search criteria.
+          {% endif %}
+        </p>
+        <a href="{% url 'auction_list' %}" class="btn btn-outline-secondary">Clear Filters</a>
+        <a href="{% url 'auction_create' %}" class="btn gh-btn-sell ms-2">List an Item</a>
+      </div>
+      {% endif %}
+
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const type_choices = [
+  ['standard', 'Standard'],
+  ['reserve', 'Reserve Price'],
+  ['buy_now', 'Buy Now'],
+  ['live', 'Live Auction'],
+  ['sealed', 'Sealed Bid'],
+];
+
+const condition_choices = [
+  ['new', 'New'],
+  ['used', 'Used'],
+  ['refurbished', 'Refurbished'],
+  ['for_parts', 'For Parts'],
+];
+
+function updateUrlParam(key, value) {
+  const url = new URL(window.location);
+  url.searchParams.set(key, value);
+  url.searchParams.delete('page');
+  return url.toString();
+}
+
+function setView(type) {
+  const grid = document.getElementById('auction-grid');
+  const items = document.querySelectorAll('.auction-grid-item');
+  if (type === 'list') {
+    items.forEach(el => {
+      el.classList.remove('col-6', 'col-md-4');
+      el.classList.add('col-12');
+    });
+    document.getElementById('list-btn').classList.add('active');
+    document.getElementById('grid-btn').classList.remove('active');
+  } else {
+    items.forEach(el => {
+      el.classList.add('col-6', 'col-md-4');
+      el.classList.remove('col-12');
+    });
+    document.getElementById('grid-btn').classList.add('active');
+    document.getElementById('list-btn').classList.remove('active');
+  }
+  localStorage.setItem('gh_view', type);
+}
+
+// Restore view preference
+const savedView = localStorage.getItem('gh_view');
+if (savedView) setView(savedView);
+</script>
+{% endblock %}

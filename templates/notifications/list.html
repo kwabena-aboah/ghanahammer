@@ -1,0 +1,43 @@
+{% extends "base/base.html" %}
+{% load static humanize %}
+
+{% block title %}Notifications | MachineAuction{% endblock %}
+
+{% block content %}
+<div class="container py-4" style="max-width:760px">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="fw-bold mb-0"><i class="bi bi-bell me-2 text-gold"></i>Notifications</h4>
+    <form method="post" action="{% url 'mark_all_notifications_read' %}">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-sm btn-outline-secondary">Mark all read</button>
+    </form>
+  </div>
+
+  <div class="gh-card">
+    {% for notif in notifications %}
+    <div class="d-flex gap-3 align-items-start p-3 border-bottom {% if not notif.is_read %}bg-warning bg-opacity-10{% endif %}">
+      <div class="mt-1">
+        {% if notif.notification_type == 'success' %}<i class="bi bi-check-circle-fill text-success fs-5"></i>
+        {% elif notif.notification_type == 'warning' %}<i class="bi bi-exclamation-triangle-fill text-warning fs-5"></i>
+        {% elif notif.notification_type == 'error' %}<i class="bi bi-x-circle-fill text-danger fs-5"></i>
+        {% elif notif.notification_type == 'bid' %}<i class="bi bi-hammer text-gold fs-5"></i>
+        {% else %}<i class="bi bi-info-circle-fill text-info fs-5"></i>{% endif %}
+      </div>
+      <div class="flex-grow-1">
+        <div class="fw-semibold small">{{ notif.title }}</div>
+        <div class="text-muted small">{{ notif.message }}</div>
+        <div class="text-muted" style="font-size:11px">{{ notif.created_at|timesince }} ago</div>
+      </div>
+      {% if notif.action_url %}
+      <a href="{{ notif.action_url }}" class="btn btn-sm btn-outline-secondary flex-shrink-0">View</a>
+      {% endif %}
+    </div>
+    {% empty %}
+    <div class="text-center py-5 text-muted">
+      <i class="bi bi-bell-slash fs-1 d-block mb-3"></i>
+      <p>No notifications yet.</p>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

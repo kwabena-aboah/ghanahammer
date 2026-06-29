@@ -1,0 +1,280 @@
+{% extends "base/base.html" %}
+{% load static humanize %}
+
+{% block content %}
+
+<!-- ═══ HERO ════════════════════════════════════════════════════════════ -->
+<section class="gh-hero">
+  <div class="container-xl position-relative">
+    <div class="row align-items-center g-4">
+      <div class="col-lg-6">
+        <div class="gh-hero-title mb-3">
+          Ghana's Premier<br>
+          <span class="accent">Online Auction</span><br>
+          Marketplace
+        </div>
+        <p class="gh-hero-subtitle mb-4">
+          Bid on vehicles, property, electronics, livestock, art and more.
+          Secure escrow payments. Mobile money accepted.
+        </p>
+        <div class="d-flex gap-3 flex-wrap mb-4">
+          <a href="{% url 'auction_list' %}" class="btn gh-btn-sell px-4 py-2">
+            <i class="bi bi-grid me-2"></i>Browse Auctions
+          </a>
+          <a href="{% url 'auction_create' %}" class="btn btn-outline-light px-4 py-2">
+            <i class="bi bi-plus-circle me-2"></i>Start Selling
+          </a>
+        </div>
+        <!-- Stats -->
+        <div class="gh-hero-stats">
+          <div class="gh-hero-stat">
+            <span class="gh-hero-stat-value">{{ total_auctions|intcomma }}+</span>
+            <span class="gh-hero-stat-label">Active Auctions</span>
+          </div>
+          <div class="gh-hero-stat">
+            <span class="gh-hero-stat-value">{{ total_users|intcomma }}+</span>
+            <span class="gh-hero-stat-label">Registered Users</span>
+          </div>
+          <div class="gh-hero-stat">
+            <span class="gh-hero-stat-value">GHS {{ total_volume|intcomma }}+</span>
+            <span class="gh-hero-stat-label">Total Volume</span>
+          </div>
+        </div>
+        <!-- Trust Badges -->
+        <div class="d-flex gap-3 flex-wrap mt-4">
+          <span class="small" style="color:#64748b"><i class="bi bi-shield-check text-success me-1"></i>KYC Verified</span>
+          <span class="small" style="color:#64748b"><i class="bi bi-lock text-success me-1"></i>Escrow Protected</span>
+          <span class="small" style="color:#64748b"><i class="bi bi-phone text-success me-1"></i>MoMo Payments</span>
+          <span class="small" style="color:#64748b"><i class="bi bi-lightning text-success me-1"></i>Real-Time Bidding</span>
+        </div>
+      </div>
+      <div class="col-lg-6">
+        <!-- Quick Search Card -->
+        <div class="gh-hero-search">
+          <h6 class="text-white fw-semibold mb-3"><i class="bi bi-search me-2"></i>Find Your Next Item</h6>
+          <form action="{% url 'auction_list' %}" method="get">
+            <div class="mb-3">
+              <input type="text" name="q" class="form-control form-control-lg"
+                     placeholder="Search auctions…" style="border-radius:8px">
+            </div>
+            <div class="row g-2 mb-3">
+              <div class="col-6">
+                <select name="category" class="form-select">
+                  <option value="">All Categories</option>
+                  {% for cat in nav_categories %}
+                  <option value="{{ cat.slug }}">{{ cat.name }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="col-6">
+                <select name="type" class="form-select">
+                  <option value="">All Types</option>
+                  <option value="live">Live Auctions</option>
+                  <option value="buy_now">Buy Now</option>
+                  <option value="reserve">Reserve Price</option>
+                </select>
+              </div>
+            </div>
+            <div class="row g-2 mb-3">
+              <div class="col-6">
+                <input type="number" name="min_price" class="form-control" placeholder="Min GHS">
+              </div>
+              <div class="col-6">
+                <input type="number" name="max_price" class="form-control" placeholder="Max GHS">
+              </div>
+            </div>
+            <button type="submit" class="btn gh-btn-sell w-100">
+              <i class="bi bi-search me-2"></i>Search Auctions
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ PAYMENT METHODS BAR ═══════════════════════════════════════════ -->
+<div style="background: var(--gh-navy-mid); border-bottom: 1px solid var(--gh-navy-light); padding: 10px 0">
+  <div class="container-xl">
+    <div class="d-flex align-items-center gap-3 flex-wrap justify-content-center" style="font-size:13px; color:#64748b">
+      <span><i class="bi bi-shield-check text-success me-1"></i> Secure Payments via</span>
+      <span class="gh-payment-icon">📱 MTN MoMo</span>
+      <span class="gh-payment-icon">📱 Telecel Cash</span>
+      <span class="gh-payment-icon">📱 AirtelTigo Money</span>
+      <span class="gh-payment-icon">💳 Visa / Mastercard</span>
+      <span class="gh-payment-icon">🏦 Bank Transfer</span>
+      <span class="ms-2 text-success"><i class="bi bi-lock-fill me-1"></i>Escrow Protected</span>
+    </div>
+  </div>
+</div>
+
+<div class="container-xl py-5">
+
+  <!-- ═══ LIVE AUCTIONS ═══════════════════════════════════════════════ -->
+  {% if live_auctions %}
+  <section class="mb-5">
+    <div class="d-flex align-items-center justify-content-between mb-4">
+      <h2 class="gh-section-heading">
+        <span class="gh-live-dot"></span> Live Auctions
+      </h2>
+      <a href="{% url 'auction_list' %}?type=live" class="btn btn-sm btn-outline-danger">View All Live</a>
+    </div>
+    <div class="row g-3">
+      {% for auction in live_auctions %}
+      <div class="col-6 col-md-4 col-lg-3">
+        {% include "auctions/partials/auction_card.html" %}
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  <!-- ═══ FEATURED AUCTIONS ════════════════════════════════════════════ -->
+  {% if featured_auctions %}
+  <section class="mb-5">
+    <div class="d-flex align-items-center justify-content-between mb-4">
+      <h2 class="gh-section-heading"><i class="bi bi-star-fill text-warning"></i> Featured Auctions</h2>
+      <a href="{% url 'auction_list' %}?featured=1" class="btn btn-sm btn-outline-secondary">View All</a>
+    </div>
+    <div class="row g-3">
+      {% for auction in featured_auctions %}
+      <div class="col-6 col-md-4 col-lg-3">
+        {% include "auctions/partials/auction_card.html" %}
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  <!-- ═══ CATEGORIES GRID ══════════════════════════════════════════════ -->
+  <section class="mb-5">
+    <h2 class="gh-section-heading mb-4">Browse by Category</h2>
+    <div class="row g-3">
+      {% for cat in top_categories %}
+      <div class="col-6 col-md-4 col-lg-2">
+        <a href="{% url 'auction_list' %}?category={{ cat.slug }}" class="gh-card text-center p-3 d-block text-decoration-none">
+          <div style="font-size:2rem; margin-bottom:8px">
+            {% if cat.icon %}<i class="bi {{ cat.icon }}"></i>
+            {% else %}🏷️{% endif %}
+          </div>
+          <div class="fw-semibold small">{{ cat.name }}</div>
+          <div class="text-muted" style="font-size:11px">{{ cat.auction_count }} listings</div>
+        </a>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+
+  <!-- ═══ ENDING SOON ══════════════════════════════════════════════════ -->
+  {% if ending_soon %}
+  <section class="mb-5">
+    <div class="d-flex align-items-center justify-content-between mb-4">
+      <h2 class="gh-section-heading"><i class="bi bi-clock-fill text-danger"></i> Ending Soon</h2>
+      <a href="{% url 'auction_list' %}?sort=ending_soon" class="btn btn-sm btn-outline-danger">View All</a>
+    </div>
+    <div class="row g-3">
+      {% for auction in ending_soon %}
+      <div class="col-6 col-md-4 col-lg-3">
+        {% include "auctions/partials/auction_card.html" %}
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  <!-- ═══ NEW ARRIVALS ═════════════════════════════════════════════════ -->
+  {% if new_arrivals %}
+  <section class="mb-5">
+    <div class="d-flex align-items-center justify-content-between mb-4">
+      <h2 class="gh-section-heading"><i class="bi bi-lightning-charge text-primary"></i> New Arrivals</h2>
+      <a href="{% url 'auction_list' %}?sort=newest" class="btn btn-sm btn-outline-secondary">View All</a>
+    </div>
+    <div class="row g-3">
+      {% for auction in new_arrivals %}
+      <div class="col-6 col-md-4 col-lg-3">
+        {% include "auctions/partials/auction_card.html" %}
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  <!-- ═══ PLATFORM BENEFITS ════════════════════════════════════════════ -->
+  <section class="mb-5">
+    <div class="row g-4">
+      <div class="col-md-4">
+        <div class="gh-card p-4 h-100">
+          <div style="font-size:2.5rem; margin-bottom:12px">🛡️</div>
+          <h6 class="fw-bold">Escrow Protection</h6>
+          <p class="text-muted small mb-0">Funds are held securely until you confirm receipt. Your money is safe.</p>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="gh-card p-4 h-100">
+          <div style="font-size:2.5rem; margin-bottom:12px">⚡</div>
+          <h6 class="fw-bold">Real-Time Bidding</h6>
+          <p class="text-muted small mb-0">WebSocket-powered live bids. Set auto-bid and never miss an auction.</p>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="gh-card p-4 h-100">
+          <div style="font-size:2.5rem; margin-bottom:12px">✅</div>
+          <h6 class="fw-bold">KYC Verified Sellers</h6>
+          <p class="text-muted small mb-0">Verified sellers have passed identity checks. Shop with confidence.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ SUBSCRIPTION PLANS PREVIEW ══════════════════════════════════ -->
+  {% if not user.is_authenticated or user.plan == 'free' %}
+  <section class="mb-5">
+    <div class="text-center mb-4">
+      <h2 class="gh-section-heading d-inline-flex">Upgrade Your Experience</h2>
+      <p class="text-muted mt-2">Unlock early access, advanced analytics, and unlimited listings</p>
+    </div>
+    <div class="row g-4 justify-content-center">
+      {% for plan_key, plan_data in plans.items %}
+      <div class="col-md-3">
+        <div class="gh-plan-card {% if plan_key == 'gold' %}recommended{% endif %}">
+          {% if plan_key == 'gold' %}<div class="badge bg-gold text-dark mb-2">Most Popular</div>{% endif %}
+          <div class="fw-bold mb-1 text-capitalize">{{ plan_key }}</div>
+          <div class="gh-plan-price">
+            <span class="currency">GHS</span>{{ plan_data.price }}
+          </div>
+          <div class="gh-plan-period text-muted mb-3">/month</div>
+          <div class="text-start">
+            <div class="gh-plan-feature">
+              <i class="bi bi-check-circle-fill"></i>
+              {{ plan_data.max_listings }} listings{% if plan_data.max_listings == -1 %} (Unlimited){% endif %}
+            </div>
+            {% if 'analytics_basic' in plan_data.features or 'analytics_full' in plan_data.features or 'all' in plan_data.features %}
+            <div class="gh-plan-feature"><i class="bi bi-check-circle-fill"></i> Seller Analytics</div>
+            {% else %}
+            <div class="gh-plan-feature text-muted"><i class="bi bi-x-circle"></i> Seller Analytics</div>
+            {% endif %}
+            {% if 'early_access' in plan_data.features or 'all' in plan_data.features %}
+            <div class="gh-plan-feature"><i class="bi bi-check-circle-fill"></i> VIP Early Access</div>
+            {% else %}
+            <div class="gh-plan-feature text-muted"><i class="bi bi-x-circle"></i> VIP Early Access</div>
+            {% endif %}
+            {% if 'alerts' in plan_data.features or 'all' in plan_data.features %}
+            <div class="gh-plan-feature"><i class="bi bi-check-circle-fill"></i> Smart Alerts</div>
+            {% endif %}
+          </div>
+          {% if plan_data.price == 0 %}
+          <a href="{% url 'account_signup' %}" class="btn btn-outline-secondary w-100 mt-3">Get Started Free</a>
+          {% else %}
+          <a href="{% url 'dashboard_subscription' %}" class="btn {% if plan_key == 'gold' %}gh-btn-sell{% else %}btn-outline-secondary{% endif %} w-100 mt-3">
+            Upgrade to {{ plan_key|title }}
+          </a>
+          {% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+</div>
+{% endblock %}

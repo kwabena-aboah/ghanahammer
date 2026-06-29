@@ -1,0 +1,102 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}Submit KYC Documents | MachineAuction{% endblock %}
+
+{% block content %}
+<div class="container py-5" style="max-width:700px">
+  <h4 class="fw-bold mb-1"><i class="bi bi-shield-plus me-2 text-gold"></i>Submit Identity Documents</h4>
+  <p class="text-muted mb-4">Your documents are encrypted and processed securely. We do not share them with third parties.</p>
+
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <div class="gh-card p-4 mb-4">
+      <h6 class="fw-bold mb-3">Document Type</h6>
+      <div class="mb-3">
+        <label class="form-label fw-semibold">Select Document <span class="text-danger">*</span></label>
+        <select name="document_type" class="form-select" required>
+          <option value="">Choose document type…</option>
+          {% for value, label in doc_choices %}
+          <option value="{{ value }}">{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="mb-3">
+        <label class="form-label fw-semibold">Document Number <span class="text-danger">*</span></label>
+        <input type="text" name="document_number" class="form-control" placeholder="e.g. GHA-XXXXXXXXX-X" required>
+      </div>
+    </div>
+
+    <div class="gh-card p-4 mb-4">
+      <h6 class="fw-bold mb-3">Upload Images</h6>
+      <div class="row g-3">
+        <div class="col-md-4">
+          <label class="form-label fw-semibold">Front of Document <span class="text-danger">*</span></label>
+          <input type="file" name="front_image" class="form-control" accept="image/*" required>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label fw-semibold">Back of Document</label>
+          <input type="file" name="back_image" class="form-control" accept="image/*">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label fw-semibold">Selfie with Document</label>
+          <input type="file" name="selfie_image" class="form-control" accept="image/*">
+        </div>
+      </div>
+    </div>
+
+    <div class="gh-card p-4 mb-4">
+      <h6 class="fw-bold mb-3">Address Information</h6>
+      <div class="mb-3">
+        <label class="form-label fw-semibold">Street Address <span class="text-danger">*</span></label>
+        <textarea name="address" class="form-control" rows="2" required></textarea>
+      </div>
+      <div class="row g-3">
+        <div class="col-md-4">
+          <label class="form-label fw-semibold">City <span class="text-danger">*</span></label>
+          <input type="text" name="city" class="form-control" required>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label fw-semibold">Region <span class="text-danger">*</span></label>
+          <select name="region" class="form-select" required>
+            <option value="">Select region…</option>
+            {% for r in regions %}
+            <option value="{{ r }}">{{ r }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label fw-semibold">GhanaPost GPS</label>
+          <input type="text" name="ghana_post_gps" class="form-control" placeholder="e.g. GA-123-4567">
+        </div>
+      </div>
+    </div>
+
+    <div class="gh-card p-4 mb-4">
+      <h6 class="fw-bold mb-3">Business Information (Optional)</h6>
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">Business Name</label>
+          <input type="text" name="business_name" class="form-control">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">TIN Number</label>
+          <input type="text" name="tin_number" class="form-control" placeholder="Tax Identification Number">
+        </div>
+      </div>
+    </div>
+
+    <div class="alert alert-secondary small mb-4">
+      <i class="bi bi-lock me-1"></i>
+      By submitting, you confirm the information is accurate and consent to identity verification processing.
+    </div>
+
+    <div class="d-flex gap-3">
+      <button type="submit" class="btn gh-btn-sell px-5">
+        <i class="bi bi-upload me-2"></i>Submit for Verification
+      </button>
+      <a href="{% url 'kyc_overview' %}" class="btn btn-outline-secondary">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

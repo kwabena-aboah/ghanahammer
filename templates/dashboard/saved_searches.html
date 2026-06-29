@@ -1,0 +1,37 @@
+{% extends "base/base.html" %}
+{% load static %}
+{% block title %}Saved Searches | MachineAuction{% endblock %}
+{% block content %}
+<div class="container-xl py-4" style="max-width:900px">
+  <h4 class="fw-bold mb-4"><i class="bi bi-bell me-2 text-gold"></i>Saved Searches & Smart Alerts</h4>
+  <div class="gh-card p-4 mb-4">
+    <h6 class="fw-bold mb-3">Create New Alert</h6>
+    <form method="post">{% csrf_token %}<input type="hidden" name="action" value="create">
+      <div class="row g-3">
+        <div class="col-md-4"><label class="form-label fw-semibold small">Alert Name</label><input type="text" name="name" class="form-control form-control-sm" placeholder="e.g. Toyota Corolla Accra" required></div>
+        <div class="col-md-4"><label class="form-label fw-semibold small">Search Keywords</label><input type="text" name="query" class="form-control form-control-sm" placeholder="Keywords…"></div>
+        <div class="col-md-4"><label class="form-label fw-semibold small">Category</label><select name="category" class="form-select form-select-sm"><option value="">Any category</option>{% for cat in categories %}<option value="{{ cat.slug }}">{{ cat.name }}</option>{% endfor %}</select></div>
+        <div class="col-md-3"><label class="form-label fw-semibold small">Min Price (GHS)</label><input type="number" name="min_price" class="form-control form-control-sm"></div>
+        <div class="col-md-3"><label class="form-label fw-semibold small">Max Price (GHS)</label><input type="number" name="max_price" class="form-control form-control-sm"></div>
+        <div class="col-md-3"><label class="form-label fw-semibold small">Location</label><input type="text" name="location" class="form-control form-control-sm" placeholder="City…"></div>
+        <div class="col-md-3 d-flex align-items-end"><button type="submit" class="btn gh-btn-sell btn-sm w-100"><i class="bi bi-plus me-1"></i>Create Alert</button></div>
+      </div>
+    </form>
+  </div>
+  {% if searches %}
+  <div class="gh-card">
+    {% for search in searches %}
+    <div class="d-flex justify-content-between align-items-center p-3 border-bottom">
+      <div><div class="fw-semibold small">{{ search.name }}</div><div class="text-muted" style="font-size:12px">{% if search.query %}{{ search.query }} · {% endif %}{% if search.category %}{{ search.category }} · {% endif %}{% if search.min_price %}GHS {{ search.min_price }}+{% endif %}</div></div>
+      <div class="d-flex gap-2">
+        <form method="post">{% csrf_token %}<input type="hidden" name="action" value="toggle"><input type="hidden" name="search_id" value="{{ search.id }}"><button class="btn btn-sm {% if search.is_active %}btn-success{% else %}btn-outline-secondary{% endif %}">{% if search.is_active %}Active{% else %}Paused{% endif %}</button></form>
+        <form method="post">{% csrf_token %}<input type="hidden" name="action" value="delete"><input type="hidden" name="search_id" value="{{ search.id }}"><button class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete this alert?')"><i class="bi bi-trash"></i></button></form>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="text-center py-4 text-muted"><i class="bi bi-search fs-1 d-block mb-3"></i><p>No saved searches. Create one above to get alerts.</p></div>
+  {% endif %}
+</div>
+{% endblock %}

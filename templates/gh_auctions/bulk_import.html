@@ -1,0 +1,64 @@
+{% extends "base/base.html" %}
+{% load static humanize %}
+{% block title %}Bulk Import Listings | MachineAuction{% endblock %}
+{% block content %}
+<div class="container py-4" style="max-width:800px">
+  <h4 class="fw-bold mb-1"><i class="bi bi-upload me-2 text-gold"></i>Bulk Import Listings</h4>
+  <p class="text-muted mb-4">Upload a CSV or Excel file to create multiple listings at once.</p>
+
+  <div class="gh-card p-4 mb-4">
+    <h6 class="fw-bold mb-3">Upload File</h6>
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      <div class="mb-3">
+        <label class="form-label fw-semibold">Select File <span class="text-danger">*</span></label>
+        <input type="file" name="import_file" class="form-control" accept=".csv,.xlsx,.xls" required>
+        <div class="form-text">Accepted formats: CSV, Excel (.xlsx, .xls). Max 10MB.</div>
+      </div>
+      <button type="submit" class="btn gh-btn-sell"><i class="bi bi-cloud-upload me-2"></i>Upload & Process</button>
+    </form>
+  </div>
+
+  <div class="gh-card p-4 mb-4">
+    <h6 class="fw-bold mb-3">Required CSV Columns</h6>
+    <div class="table-responsive">
+      <table class="table table-sm table-bordered">
+        <thead class="table-light"><tr><th>Column</th><th>Required</th><th>Example</th></tr></thead>
+        <tbody>
+          <tr><td><code>title</code></td><td><span class="badge bg-danger">Yes</span></td><td>2020 Toyota Corolla</td></tr>
+          <tr><td><code>description</code></td><td>No</td><td>In good condition, one owner…</td></tr>
+          <tr><td><code>category</code></td><td><span class="badge bg-danger">Yes</span></td><td>Vehicles</td></tr>
+          <tr><td><code>starting_price</code></td><td><span class="badge bg-danger">Yes</span></td><td>15000</td></tr>
+          <tr><td><code>reserve_price</code></td><td>No</td><td>18000</td></tr>
+          <tr><td><code>buy_now_price</code></td><td>No</td><td>25000</td></tr>
+          <tr><td><code>bid_increment</code></td><td>No</td><td>500</td></tr>
+          <tr><td><code>condition</code></td><td>No</td><td>used / new / refurbished / for_parts</td></tr>
+          <tr><td><code>start_time</code></td><td>No</td><td>2026-07-01T08:00:00</td></tr>
+          <tr><td><code>end_time</code></td><td>No</td><td>2026-07-08T08:00:00</td></tr>
+          <tr><td><code>location</code></td><td>No</td><td>Accra, Ghana</td></tr>
+          <tr><td><code>region</code></td><td>No</td><td>Greater Accra</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <a href="#" class="btn btn-sm btn-outline-secondary"><i class="bi bi-download me-1"></i>Download Template CSV</a>
+  </div>
+
+  {% if recent_batches %}
+  <div class="gh-card p-4">
+    <h6 class="fw-bold mb-3">Recent Imports</h6>
+    {% for batch in recent_batches %}
+    <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+      <div>
+        <div class="small fw-semibold">{{ batch.file.name|truncatechars:40 }}</div>
+        <div class="text-muted" style="font-size:12px">{{ batch.created_at|date:"M d, Y H:i" }}</div>
+      </div>
+      <div class="text-end">
+        <span class="badge {% if batch.status == 'done' %}bg-success{% elif batch.status == 'processing' %}bg-warning text-dark{% else %}bg-danger{% endif %}">{{ batch.status|title }}</span>
+        <div class="text-muted" style="font-size:11px">{{ batch.imported }} imported, {{ batch.failed }} failed</div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

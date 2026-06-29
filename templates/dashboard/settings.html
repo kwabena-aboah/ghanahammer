@@ -1,0 +1,34 @@
+{% extends "base/base.html" %}
+{% load static %}
+{% block title %}Account Settings | MachineAuction{% endblock %}
+{% block content %}
+<div class="container py-4" style="max-width:760px">
+  <h4 class="fw-bold mb-4"><i class="bi bi-gear me-2 text-gold"></i>Account Settings</h4>
+  <div class="gh-card p-4 mb-4">
+    <h6 class="fw-bold mb-3">Notification Preferences</h6>
+    <form method="post">{% csrf_token %}<input type="hidden" name="action" value="notifications">
+      <div class="mb-2"><div class="form-check form-switch"><input class="form-check-input" type="checkbox" name="email_notifications" id="email-notif" {% if user.email_notifications %}checked{% endif %}><label class="form-check-label" for="email-notif"><i class="bi bi-envelope me-1"></i>Email Notifications</label></div></div>
+      <div class="mb-2"><div class="form-check form-switch"><input class="form-check-input" type="checkbox" name="whatsapp_notifications" id="wa-notif" {% if user.whatsapp_notifications %}checked{% endif %}><label class="form-check-label" for="wa-notif"><i class="bi bi-whatsapp me-1"></i>WhatsApp Notifications</label></div></div>
+      <div class="mb-3"><div class="form-check form-switch"><input class="form-check-input" type="checkbox" name="sms_notifications" id="sms-notif" {% if user.sms_notifications %}checked{% endif %}><label class="form-check-label" for="sms-notif"><i class="bi bi-phone me-1"></i>SMS Notifications</label></div></div>
+      <button type="submit" class="btn gh-btn-sell btn-sm">Save Preferences</button>
+    </form>
+  </div>
+  <div class="gh-card p-4 mb-4">
+    <h6 class="fw-bold mb-3">Mobile Money Account</h6>
+    <form method="post">{% csrf_token %}<input type="hidden" name="action" value="payment">
+      <div class="row g-3">
+        <div class="col-md-6"><label class="form-label fw-semibold small">MoMo Network</label><select name="momo_network" class="form-select form-select-sm"><option value="">Select network</option><option value="mtn_momo" {% if user.momo_network == 'mtn_momo' %}selected{% endif %}>MTN MoMo</option><option value="telecel_cash" {% if user.momo_network == 'telecel_cash' %}selected{% endif %}>Telecel Cash</option><option value="airteltigo_money" {% if user.momo_network == 'airteltigo_money' %}selected{% endif %}>AirtelTigo Money</option></select></div>
+        <div class="col-md-6"><label class="form-label fw-semibold small">MoMo Number</label><input type="tel" name="momo_number" class="form-control form-control-sm" value="{{ user.momo_number }}" placeholder="0241234567"></div>
+      </div>
+      <button type="submit" class="btn gh-btn-sell btn-sm mt-3">Save Payment Info</button>
+    </form>
+  </div>
+  <div class="gh-card p-4 mb-4">
+    <h6 class="fw-bold mb-3">Security</h6>
+    <div class="d-flex justify-content-between align-items-center">
+      <div><div class="fw-semibold small">Two-Factor Authentication</div><div class="text-muted small">{% if user.two_factor_enabled %}Enabled <i class="bi bi-check-circle-fill text-success"></i>{% else %}Not enabled{% endif %}</div></div>
+      {% if user.two_factor_enabled %}<a href="{% url 'disable_2fa' %}" class="btn btn-sm btn-outline-danger">Disable 2FA</a>{% else %}<a href="{% url 'setup_2fa' %}" class="btn btn-sm gh-btn-sell">Enable 2FA</a>{% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

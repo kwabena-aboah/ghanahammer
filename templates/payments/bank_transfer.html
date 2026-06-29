@@ -1,0 +1,22 @@
+{% extends "base/base.html" %}
+{% load humanize %}
+{% block title %}Bank Transfer Details | MachineAuction{% endblock %}
+{% block content %}
+<div class="container py-5" style="max-width:580px">
+  <div class="gh-card p-4">
+    <h5 class="fw-bold mb-1"><i class="bi bi-bank me-2 text-gold"></i>Bank Transfer Instructions</h5>
+    <p class="text-muted small mb-4">Transfer the exact amount below to secure your purchase. Use the reference code so we can match your payment.</p>
+    <div class="rounded p-3 mb-4" style="background:var(--gh-bg)">
+      <div class="row g-3">
+        <div class="col-6"><div class="text-muted small">Bank Name</div><div class="fw-semibold">{{ bank_info.bank_name }}</div></div>
+        <div class="col-6"><div class="text-muted small">Account Name</div><div class="fw-semibold">{{ bank_info.account_name }}</div></div>
+        <div class="col-6"><div class="text-muted small">Account Number</div><div class="fw-bold fs-5">{{ bank_info.account_number }}</div></div>
+        <div class="col-6"><div class="text-muted small">Amount</div><div class="fw-bold fs-5 text-gold">GHS {{ payment.amount_ghs|intcomma }}</div></div>
+        <div class="col-12"><div class="text-muted small">Reference Code (Important)</div><div class="fw-bold text-danger">{{ payment.paystack_reference }}</div><div class="form-text">Include this reference in your transfer description.</div></div>
+      </div>
+    </div>
+    <div class="alert alert-warning small"><i class="bi bi-exclamation-triangle me-1"></i>Transfer within <strong>24 hours</strong>. Your reservation expires after that.</div>
+    <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">Done — I've Made the Transfer</a>
+  </div>
+</div>
+{% endblock %}

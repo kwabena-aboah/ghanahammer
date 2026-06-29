@@ -1,0 +1,71 @@
+{% load static humanize %}
+<div class="gh-card gh-auction-card">
+  <a href="{{ auction.get_absolute_url }}" class="d-block position-relative">
+    {% with primary_img=auction.images.first %}
+    {% if primary_img %}
+    <img src="{{ primary_img.image.url }}" class="gh-auction-img" alt="{{ auction.title }}" loading="lazy">
+    {% else %}
+    <div class="gh-auction-img-placeholder">
+      {% if auction.category.icon %}<i class="bi {{ auction.category.icon }}"></i>
+      {% else %}🏷️{% endif %}
+    </div>
+    {% endif %}
+    {% endwith %}
+
+    {% if auction.status == 'active' or auction.status == 'extended' %}
+    <span class="gh-badge-live"><span class="gh-live-dot"></span>LIVE</span>
+    {% elif auction.is_featured %}
+    <span class="gh-badge-featured"><i class="bi bi-star-fill"></i> Featured</span>
+    {% endif %}
+
+    {% if auction.is_reserve_met %}
+    <span class="gh-badge-reserve-met"><i class="bi bi-check"></i> Reserve Met</span>
+    {% endif %}
+  </a>
+
+  {% if user.is_authenticated %}
+  <button class="gh-watch-btn {% if auction.id|stringformat:'s' in watchlist_ids %}watching{% endif %}"
+          onclick="event.preventDefault(); GH.toggleWatchlist('{{ auction.id }}', this)"
+          title="Watch this auction">
+    <i class="bi {% if auction.id|stringformat:'s' in watchlist_ids %}bi-heart-fill{% else %}bi-heart{% endif %}"></i>
+  </button>
+  {% endif %}
+
+  <div class="gh-auction-body">
+    <div class="gh-auction-lot">{{ auction.category.name }} · Lot {{ auction.lot_number }}</div>
+    <a href="{{ auction.get_absolute_url }}" class="gh-auction-title d-block">{{ auction.title|truncatechars:65 }}</a>
+
+    <div class="d-flex justify-content-between align-items-end mt-2">
+      <div>
+        <div class="gh-price-label">Current Bid</div>
+        <div class="gh-current-price">GHS {{ auction.current_price|intcomma }}</div>
+      </div>
+      <div class="text-end">
+        <div class="gh-auction-meta mb-1">
+          <i class="bi bi-hammer me-1"></i>{{ auction.bid_count }} bid{{ auction.bid_count|pluralize }}
+        </div>
+        {% if auction.is_active %}
+        <div data-countdown="{{ auction.end_time|date:'c' }}" class="gh-auction-meta">
+          <i class="bi bi-clock me-1"></i>Loading…
+        </div>
+        {% else %}
+        <div class="text-muted small">{{ auction.get_status_display }}</div>
+        {% endif %}
+      </div>
+    </div>
+
+    {% if auction.buy_now_price %}
+    <div class="mt-2 pt-2 border-top">
+      <small class="text-success fw-semibold">
+        <i class="bi bi-bag-check me-1"></i>Buy Now: GHS {{ auction.buy_now_price|intcomma }}
+      </small>
+    </div>
+    {% endif %}
+
+    {% if auction.location %}
+    <div class="mt-1 text-muted" style="font-size:11px">
+      <i class="bi bi-geo-alt me-1"></i>{{ auction.location }}
+    </div>
+    {% endif %}
+  </div>
+</div>

@@ -1,0 +1,57 @@
+{% extends "base/auth_base.html" %}
+{% load allauth i18n %}
+{% block head_title %}
+    {% trans "Signup" %}
+{% endblock head_title %}
+{% block content %}
+<div class="auth-hero-content">
+    <div class="auth-card">
+    {% element h1 %}
+        <h1 class="auth-title">
+            {% trans "Sign Up" %}
+        </h1>
+    {% endelement %}
+    {% setvar link %}
+        <a href="{{ login_url }}">
+        {% endsetvar %}
+        {% setvar end_link %}
+        </a>
+    {% endsetvar %}
+<div class="auth-footer">
+    {% element p %}
+        {% blocktranslate %}Already have an account? Then please {{ link }}sign in{{ end_link }}.{% endblocktranslate %}
+    {% endelement %}
+</div>
+    {% if not SOCIALACCOUNT_ONLY %}
+        {% url 'account_signup' as action_url %}
+        {% element form form=form method="post" action=action_url tags="entrance,signup" %}
+            {% slot body %}
+                {% csrf_token %}
+                {% element fields form=form unlabeled=True %}
+                {% endelement %}
+                {{ redirect_field }}
+            {% endslot %}
+            {% slot actions %}
+                {% element button tags="prominent,signup" type="submit" %}
+                    {% trans "Sign Up" %}
+                {% endelement %}
+            {% endslot %}
+        {% endelement %}
+    {% endif %}
+    <div class="auth-footer">
+    {% if PASSKEY_SIGNUP_ENABLED %}
+        {% element hr %}
+        {% endelement %}
+        {% element button href=signup_by_passkey_url tags="prominent,signup,outline,primary" %}
+            {% trans "Sign up using a passkey" %}
+        {% endelement %}
+    {% endif %}
+    {% if SOCIALACCOUNT_ENABLED %}
+        {% include "socialaccount/snippets/login.html" with page_layout="entrance" %}
+    {% endif %}
+    </div>
+    <div style="margin-top:15px; font-size:12px; color:#8892a0;">
+        🔒 Secure login • Verified marketplace • Paystack protected
+    </div>
+</div>
+{% endblock content %}

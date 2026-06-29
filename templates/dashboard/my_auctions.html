@@ -1,0 +1,42 @@
+{% extends "base/base.html" %}
+{% load static humanize %}
+{% block title %}My Listings | MachineAuction{% endblock %}
+{% block content %}
+<div class="container-xl py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <h4 class="fw-bold mb-0"><i class="bi bi-tag me-2 text-gold"></i>My Listings</h4>
+    <div class="d-flex gap-2">
+      <a href="{% url 'auction_create' %}" class="btn gh-btn-sell"><i class="bi bi-plus-circle me-1"></i>New Listing</a>
+      <a href="{% url 'bulk_import' %}" class="btn btn-outline-secondary"><i class="bi bi-upload me-1"></i>Bulk Import</a>
+    </div>
+  </div>
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-md-3"><div class="gh-stat-card"><div class="gh-stat-icon" style="background:rgba(240,165,0,.1);color:var(--gh-gold)"><i class="bi bi-tag fs-4"></i></div><div><div class="gh-stat-value">{{ stats.total }}</div><div class="gh-stat-label">Total Listings</div></div></div></div>
+    <div class="col-6 col-md-3"><div class="gh-stat-card"><div class="gh-stat-icon" style="background:rgba(6,160,80,.1);color:var(--gh-green)"><i class="bi bi-lightning fs-4"></i></div><div><div class="gh-stat-value">{{ stats.active }}</div><div class="gh-stat-label">Active</div></div></div></div>
+    <div class="col-6 col-md-3"><div class="gh-stat-card"><div class="gh-stat-icon" style="background:rgba(79,70,229,.1);color:#4f46e5"><i class="bi bi-trophy fs-4"></i></div><div><div class="gh-stat-value">{{ stats.sold }}</div><div class="gh-stat-label">Sold</div></div></div></div>
+    <div class="col-6 col-md-3"><div class="gh-stat-card"><div class="gh-stat-icon" style="background:rgba(240,165,0,.1);color:var(--gh-gold)"><i class="bi bi-cash fs-4"></i></div><div><div class="gh-stat-value">GHS {{ stats.revenue|default:0|floatformat:0|intcomma }}</div><div class="gh-stat-label">Revenue</div></div></div></div>
+  </div>
+  <div class="gh-card">
+    <div class="p-3 border-bottom d-flex gap-2 flex-wrap">
+      <a href="?" class="btn btn-sm {% if not status_filter %}gh-btn-sell{% else %}btn-outline-secondary{% endif %}">All</a>
+      {% for val, label in status_choices %}<a href="?status={{ val }}" class="btn btn-sm {% if status_filter == val %}gh-btn-sell{% else %}btn-outline-secondary{% endif %}">{{ label }}</a>{% endfor %}
+    </div>
+    {% for auction in auctions %}
+    <div class="d-flex gap-3 align-items-center p-3 border-bottom">
+      {% with img=auction.images.first %}{% if img %}<img src="{{ img.image.url }}" width="56" height="56" class="rounded" style="object-fit:cover">{% else %}<div class="rounded" style="width:56px;height:56px;background:var(--gh-bg);display:flex;align-items:center;justify-content:center">🏷️</div>{% endif %}{% endwith %}
+      <div class="flex-grow-1">
+        <a href="{{ auction.get_absolute_url }}" class="fw-semibold small d-block">{{ auction.title|truncatechars:55 }}</a>
+        <div class="text-muted" style="font-size:12px">Lot {{ auction.lot_number }} · {{ auction.category.name }} · GHS {{ auction.current_price|intcomma }}</div>
+        <div class="text-muted" style="font-size:11px"><i class="bi bi-hammer me-1"></i>{{ auction.bid_count }} bids · <i class="bi bi-eye me-1"></i>{{ auction.view_count }} views</div>
+      </div>
+      <div class="text-end d-flex flex-column gap-1">
+        <span class="badge {% if auction.status == 'active' %}bg-success{% elif auction.status == 'sold' %}bg-primary{% elif auction.status == 'draft' %}bg-secondary{% elif auction.status == 'ended' %}bg-dark{% else %}bg-warning text-dark{% endif %}">{{ auction.get_status_display }}</span>
+        <a href="{% url 'auction_edit' auction.slug %}" class="btn btn-sm btn-outline-secondary">Edit</a>
+      </div>
+    </div>
+    {% empty %}
+    <div class="text-center py-5 text-muted"><i class="bi bi-tag fs-1 d-block mb-3"></i><p>No listings yet. <a href="{% url 'auction_create' %}">Create your first auction</a></p></div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

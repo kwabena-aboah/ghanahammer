@@ -1,0 +1,296 @@
+{% extends "base/base.html" %}
+{% load static humanize %}
+
+{% block title %}{{ auction.title }} — Lot {{ auction.lot_number }} | MachineAuction{% endblock %}
+{% block meta_description %}Bid on {{ auction.title }}. Starting price GHS {{ auction.starting_price|intcomma }}. Auction ends {{ auction.end_time|date:"M d, Y H:i" }}.{% endblock %}
+
+{% block extra_css %}
+<style>
+.gh-detail-img-main { width: 100%; border-radius: 12px; object-fit: cover; max-height: 500px; background: #e2e8f0; }
+.gh-gallery-thumb { width: 72px; height: 72px; object-fit: cover; border-radius: 8px; cursor: pointer; border: 2px solid transparent; transition: border-color .15s; }
+.gh-gallery-thumb.active, .gh-gallery-thumb:hover { border-color: var(--gh-gold); }
+.gh-doc-link { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; padding: 6px 12px; border: 1px solid var(--gh-border); border-radius: 6px; color: var(--gh-text-muted); }
+.gh-doc-link:hover { border-color: var(--gh-gold); color: var(--gh-gold); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-xl py-4">
+
+  <!-- Breadcrumb -->
+  <nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb small">
+      <li class="breadcrumb-item"><a href="/">Home</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'auction_list' %}">Auctions</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'auction_list' %}?category={{ auction.category.slug }}">{{ auction.category.name }}</a></li>
+      <li class="breadcrumb-item active">Lot {{ auction.lot_number }}</li>
+    </ol>
+  </nav>
+
+  <div class="row g-4">
+    <!-- ─── Left: Images + Details ──────────────────────────── -->
+    <div class="col-lg-7">
+
+      <!-- Main Image -->
+      <div class="position-relative mb-3">
+        {% with primary=auction.images.filter|first %}
+        <img id="gh-gallery-main"
+             src="{% if primary %}{{ primary.image.url }}{% else %}{% static 'images/no-image.png' %}{% endif %}"
+             alt="{{ auction.title }}"
+             class="gh-detail-img-main w-100">
+        {% endwith %}
+
+        <!-- Status Badge -->
+        {% if auction.status == 'active' or auction.status == 'extended' %}
+        <span class="gh-badge-live"><span class="gh-live-dot"></span> LIVE</span>
+        {% elif auction.is_featured %}
+        <span class="gh-badge-featured"><i class="bi bi-star-fill me-1"></i> Featured</span>
+        {% endif %}
+
+        {% if auction.is_reserve_met %}
+        <span class="gh-badge-reserve-met"><i class="bi bi-check-circle me-1"></i> Reserve Met</span>
+        {% endif %}
+      </div>
+
+      <!-- Thumbnail Gallery -->
+      {% if auction.images.count > 1 %}
+      <div class="d-flex gap-2 flex-wrap mb-4">
+        {% for img in auction.images.all %}
+        <img src="{{ img.image.url }}"
+             alt="Image {{ forloop.counter }}"
+             class="gh-gallery-thumb {% if forloop.first %}active{% endif %}"
+             data-large="{{ img.image.url }}"
+             onclick="document.querySelectorAll('.gh-gallery-thumb').forEach(t=>t.classList.remove('active')); this.classList.add('active'); document.getElementById('gh-gallery-main').src=this.dataset.large">
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <!-- Lot Info -->
+      <div class="gh-card p-4 mb-4">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <div>
+            <span class="gh-auction-lot">Lot {{ auction.lot_number }}</span>
+            {% if auction.auction_type == 'live' %}
+            <span class="badge bg-danger ms-2">Live Auction</span>
+            {% elif auction.auction_type == 'reserve' %}
+            <span class="badge bg-secondary ms-2">Reserve Price</span>
+            {% elif auction.auction_type == 'buy_now' %}
+            <span class="badge bg-success ms-2">Buy Now Available</span>
+            {% endif %}
+          </div>
+          <div class="d-flex gap-2">
+            <!-- Share -->
+            <button class="btn btn-sm btn-outline-secondary"
+              onclick="GH.copyToClipboard(window.location.href, this)" title="Copy link">
+              <i class="bi bi-share"></i>
+            </button>
+            <!-- Watchlist -->
+            {% if user.is_authenticated %}
+            <button class="btn btn-sm {% if is_watching %}btn-danger{% else %}btn-outline-danger{% endif %} gh-watch-btn-detail"
+              onclick="GH.toggleWatchlist('{{ auction.id }}', this)" id="watchlist-btn"
+              title="{% if is_watching %}Remove from watchlist{% else %}Add to watchlist{% endif %}">
+              <i class="bi {% if is_watching %}bi-heart-fill{% else %}bi-heart{% endif %}"></i>
+              {{ auction.watchlist_count }} watching
+            </button>
+            {% endif %}
+          </div>
+        </div>
+
+        <h1 class="h4 fw-bold mb-3">{{ auction.title }}</h1>
+
+        <!-- Key Details Grid -->
+        <div class="row g-3 mb-3">
+          <div class="col-6 col-md-3">
+            <div class="small text-muted">Condition</div>
+            <div class="fw-semibold">{{ auction.get_condition_display }}</div>
+          </div>
+          <div class="col-6 col-md-3">
+            <div class="small text-muted">Category</div>
+            <div class="fw-semibold">{{ auction.category.name }}</div>
+          </div>
+          <div class="col-6 col-md-3">
+            <div class="small text-muted">Location</div>
+            <div class="fw-semibold"><i class="bi bi-geo-alt me-1"></i>{{ auction.location|default:"Ghana" }}</div>
+          </div>
+          <div class="col-6 col-md-3">
+            <div class="small text-muted">Views</div>
+            <div class="fw-semibold"><i class="bi bi-eye me-1"></i>{{ auction.view_count|intcomma }}</div>
+          </div>
+        </div>
+
+        <!-- Shipping -->
+        <div class="d-flex gap-3 flex-wrap mb-3">
+          {% if auction.shipping_available %}
+          <span class="small text-success"><i class="bi bi-truck me-1"></i> Shipping Available
+            {% if auction.shipping_cost %}(GHS {{ auction.shipping_cost|intcomma }}){% endif %}
+          </span>
+          {% endif %}
+          {% if auction.pickup_only %}
+          <span class="small text-muted"><i class="bi bi-person-walking me-1"></i> Pickup Only</span>
+          {% endif %}
+        </div>
+
+        <hr class="gh-divider">
+
+        <!-- Description -->
+        <h6 class="fw-bold mb-2">Description</h6>
+        <div class="text-muted" style="white-space: pre-line; line-height: 1.7">{{ auction.description }}</div>
+
+        <!-- Documents -->
+        {% if auction.documents.exists %}
+        <hr class="gh-divider">
+        <h6 class="fw-bold mb-2">Documents</h6>
+        <div class="d-flex gap-2 flex-wrap">
+          {% for doc in auction.documents.all %}
+          <a href="{{ doc.file.url }}" class="gh-doc-link" target="_blank">
+            <i class="bi bi-file-earmark-text"></i> {{ doc.title }}
+          </a>
+          {% endfor %}
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Seller Card -->
+      <div class="gh-card p-4 mb-4">
+        <h6 class="fw-bold mb-3">Seller Information</h6>
+        <div class="d-flex align-items-center gap-3">
+          {% if auction.seller.avatar %}
+          <img src="{{ auction.seller.avatar.url }}" class="rounded-circle" width="52" height="52" style="object-fit:cover">
+          {% else %}
+          <div class="rounded-circle bg-gold d-flex align-items-center justify-content-center fw-bold"
+               style="width:52px;height:52px;background:var(--gh-gold);color:var(--gh-navy);font-size:1.2rem">
+            {{ auction.seller.first_name|first|upper }}
+          </div>
+          {% endif %}
+          <div>
+            <div class="fw-semibold">
+              {{ auction.seller.get_full_name|default:auction.seller.username }}
+              {% if auction.seller.is_verified_seller %}
+              <span class="gh-verified-badge ms-1"><i class="bi bi-patch-check-fill"></i> Verified</span>
+              {% endif %}
+            </div>
+            <div class="text-muted small">
+              ⭐ {{ auction.seller.seller_rating }} ·
+              {{ auction.seller.total_listings }} listings ·
+              Member since {{ auction.seller.date_joined|date:"Y" }}
+            </div>
+          </div>
+          <a href="{% url 'messaging_start' seller_id=auction.seller.id auction_id=auction.id %}"
+             class="btn btn-outline-secondary btn-sm ms-auto">
+            <i class="bi bi-chat me-1"></i> Message Seller
+          </a>
+        </div>
+      </div>
+
+      <!-- Q&A Section -->
+      <div class="gh-card p-4">
+        <h6 class="fw-bold mb-3">Questions & Answers</h6>
+        {% for qa in auction.questions.filter(is_public=True) %}
+        <div class="mb-3">
+          <div class="small"><strong>Q:</strong> {{ qa.question }}</div>
+          {% if qa.answer %}
+          <div class="small text-muted ms-3 mt-1"><strong>A:</strong> {{ qa.answer }}</div>
+          {% else %}
+          <div class="small text-muted ms-3 mt-1"><em>Awaiting seller response</em></div>
+          {% endif %}
+        </div>
+        {% empty %}
+        <p class="text-muted small">No questions yet.</p>
+        {% endfor %}
+
+        {% if user.is_authenticated and user != auction.seller %}
+        <form method="post" action="{% url 'auction_ask_question' auction.slug %}">
+          {% csrf_token %}
+          <div class="input-group mt-3">
+            <input type="text" name="question" class="form-control form-control-sm" placeholder="Ask the seller a question…">
+            <button class="btn btn-sm gh-btn-sell" type="submit">Ask</button>
+          </div>
+        </form>
+        {% endif %}
+      </div>
+
+    </div>
+
+    <!-- ─── Right: Bidding Panel + Timer ────────────────────── -->
+    <div class="col-lg-5">
+
+      <!-- Countdown Timer -->
+      <div class="gh-card p-4 mb-4 text-center" data-end-time="{{ auction.end_time|date:'c' }}">
+        <div class="small text-muted mb-2 fw-semibold text-uppercase" style="letter-spacing:.5px">
+          {% if auction.is_active %}Auction Ends In{% else %}Auction Ended{% endif %}
+        </div>
+        <div class="gh-timer-block justify-content-center mb-2">
+          <div class="gh-timer-unit">
+            <div class="gh-timer-value" id="timer-days">--</div>
+            <div class="gh-timer-label">Days</div>
+          </div>
+          <div class="gh-timer-unit">
+            <div class="gh-timer-value" id="timer-hours">--</div>
+            <div class="gh-timer-label">Hours</div>
+          </div>
+          <div class="gh-timer-unit">
+            <div class="gh-timer-value" id="timer-minutes">--</div>
+            <div class="gh-timer-label">Mins</div>
+          </div>
+          <div class="gh-timer-unit">
+            <div class="gh-timer-value" id="timer-seconds">--</div>
+            <div class="gh-timer-label">Secs</div>
+          </div>
+        </div>
+        <div class="small text-muted">
+          Ends: {{ auction.end_time|date:"D, M d Y \a\t H:i" }} (GMT)
+        </div>
+        {% if auction.original_end_time %}
+        <div class="small text-warning mt-1">
+          <i class="bi bi-lightning-charge-fill"></i>
+          Originally ended {{ auction.original_end_time|date:"H:i" }} — extended by anti-snipe
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Vue Bidding App -->
+      <div id="gh-bidding-app"></div>
+
+    </div>
+  </div>
+
+  <!-- Related Auctions -->
+  {% if related_auctions %}
+  <div class="mt-5">
+    <h5 class="gh-section-heading mb-4">Similar Auctions</h5>
+    <div class="row g-3">
+      {% for rel in related_auctions %}
+      <div class="col-6 col-md-3">
+        {% include "auctions/partials/auction_card.html" with auction=rel %}
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+</div>
+
+<!-- Inject auction data for Vue -->
+<script>
+window.GH_AUCTION = {
+  id: "{{ auction.id }}",
+  lot_number: "{{ auction.lot_number }}",
+  title: "{{ auction.title|escapejs }}",
+  current_price: "{{ auction.current_price }}",
+  bid_count: {{ auction.bid_count }},
+  status: "{{ auction.status }}",
+  end_time: "{{ auction.end_time|date:'c' }}",
+  min_next_bid: "{{ auction.min_next_bid }}",
+  buy_now_price: "{% if auction.buy_now_price %}{{ auction.buy_now_price }}{% else %}{% endif %}",
+  reserve_met: {{ auction.is_reserve_met|yesno:"true,false" }},
+  is_authenticated: {{ user.is_authenticated|yesno:"true,false" }},
+  is_seller: {{ is_seller|yesno:"true,false" }},
+  sniper_minutes: {{ sniper_minutes }},
+  recent_bids: {{ recent_bids_json|safe }},
+};
+</script>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/bidding-app.js' %}"></script>
+{% endblock %}

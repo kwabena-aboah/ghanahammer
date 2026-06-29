@@ -1,0 +1,27 @@
+{% extends "base/base.html" %}
+{% load static humanize %}
+{% block title %}My Purchases | MachineAuction{% endblock %}
+{% block content %}
+<div class="container-xl py-4">
+  <h4 class="fw-bold mb-4"><i class="bi bi-bag-check me-2 text-gold"></i>My Purchases</h4>
+  {% for item in purchases %}
+  <div class="gh-card p-4 mb-3">
+    <div class="d-flex gap-3 align-items-start flex-wrap">
+      {% with img=item.auction.images.first %}{% if img %}<img src="{{ img.image.url }}" width="80" height="80" class="rounded" style="object-fit:cover">{% endif %}{% endwith %}
+      <div class="flex-grow-1">
+        <a href="{{ item.auction.get_absolute_url }}" class="fw-bold d-block">{{ item.auction.title }}</a>
+        <div class="text-muted small">Lot {{ item.auction.lot_number }} · Seller: {{ item.auction.seller.get_full_name|default:item.auction.seller.username }}</div>
+        <div class="fw-bold mt-1">GHS {{ item.auction.winning_bid_amount|intcomma }}</div>
+      </div>
+      <div class="text-end">
+        {% if item.needs_payment %}<a href="{% url 'checkout' item.auction.id %}" class="btn gh-btn-sell btn-sm">Pay Now</a>
+        {% elif item.escrow %}<a href="{% url 'escrow_detail' item.escrow.pk %}" class="btn btn-outline-secondary btn-sm">View Escrow</a>
+        {% else %}<span class="badge bg-success">Paid</span>{% endif %}
+      </div>
+    </div>
+  </div>
+  {% empty %}
+  <div class="text-center py-5 text-muted"><i class="bi bi-bag fs-1 d-block mb-3"></i><p>No purchases yet. <a href="{% url 'auction_list' %}">Browse auctions</a></p></div>
+  {% endfor %}
+</div>
+{% endblock %}

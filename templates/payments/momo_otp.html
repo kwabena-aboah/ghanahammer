@@ -1,0 +1,17 @@
+{% extends "base/base.html" %}
+{% block title %}Enter MoMo OTP | MachineAuction{% endblock %}
+{% block content %}
+<div class="container py-5" style="max-width:460px">
+  <div class="gh-card p-4 text-center">
+    <i class="bi bi-phone-fill fs-1 text-gold d-block mb-3"></i>
+    <h5 class="fw-bold mb-1">Approve Mobile Payment</h5>
+    <p class="text-muted small mb-4">Check your phone for a USSD prompt and enter the OTP below, or approve the payment directly on your phone.</p>
+    <form method="post" action="{% url 'momo_otp_submit' %}">
+      {% csrf_token %}
+      <input type="text" name="otp" class="form-control form-control-lg text-center mb-3"
+             placeholder="Enter OTP" maxlength="6" pattern="[0-9]+" autofocus required>
+      <button type="submit" class="btn gh-btn-sell w-100">Confirm Payment</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

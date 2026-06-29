@@ -1,0 +1,250 @@
+{% extends "base/base.html" %}
+{% load static humanize %}
+
+{% block title %}Seller Analytics Dashboard | MachineAuction{% endblock %}
+
+{% block extra_css %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+.gh-analytics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
+.gh-chart-card { background: #fff; border: 1px solid var(--gh-border); border-radius: var(--gh-radius); padding: 20px; }
+.gh-metric-change { font-size: 12px; }
+.gh-metric-change.up { color: var(--gh-green); }
+.gh-metric-change.down { color: var(--gh-red); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-xl py-4">
+
+  <div class="d-flex align-items-center justify-content-between mb-4">
+    <h4 class="fw-bold mb-0"><i class="bi bi-graph-up me-2 text-gold"></i>Seller Analytics</h4>
+    <div class="d-flex gap-2">
+      <select id="period-select" class="form-select form-select-sm" onchange="changePeriod(this.value)">
+        <option value="7">Last 7 Days</option>
+        <option value="30" selected>Last 30 Days</option>
+        <option value="90">Last 90 Days</option>
+      </select>
+      {% if not user.has_analytics %}
+      <div class="alert alert-warning py-1 px-3 mb-0 small">
+        <i class="bi bi-lock me-1"></i>
+        <a href="{% url 'dashboard_subscription' %}">Upgrade to Silver+</a> for full analytics
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- ── Key Metrics ───────────────────────────────────────────── -->
+  <div class="gh-analytics-grid">
+    <div class="gh-stat-card">
+      <div class="gh-stat-icon bg-warning bg-opacity-10" style="color:var(--gh-gold)"><i class="bi bi-cash-stack fs-4"></i></div>
+      <div>
+        <div class="gh-stat-value">GHS {{ summary.total_revenue_ghs|floatformat:0|intcomma }}</div>
+        <div class="gh-stat-label">Total Revenue ({{ summary.period_days }}d)</div>
+      </div>
+    </div>
+    <div class="gh-stat-card">
+      <div class="gh-stat-icon bg-success bg-opacity-10 text-success"><i class="bi bi-trophy fs-4"></i></div>
+      <div>
+        <div class="gh-stat-value">{{ summary.total_sold }}</div>
+        <div class="gh-stat-label">Items Sold</div>
+      </div>
+    </div>
+    <div class="gh-stat-card">
+      <div class="gh-stat-icon bg-primary bg-opacity-10 text-primary"><i class="bi bi-tag fs-4"></i></div>
+      <div>
+        <div class="gh-stat-value">{{ summary.total_listings }}</div>
+        <div class="gh-stat-label">Total Listings</div>
+      </div>
+    </div>
+    <div class="gh-stat-card">
+      <div class="gh-stat-icon bg-info bg-opacity-10 text-info"><i class="bi bi-eye fs-4"></i></div>
+      <div>
+        <div class="gh-stat-value">{{ summary.total_views|intcomma }}</div>
+        <div class="gh-stat-label">Total Views</div>
+      </div>
+    </div>
+    <div class="gh-stat-card">
+      <div class="gh-stat-icon bg-danger bg-opacity-10 text-danger"><i class="bi bi-hammer fs-4"></i></div>
+      <div>
+        <div class="gh-stat-value">{{ summary.total_bids|intcomma }}</div>
+        <div class="gh-stat-label">Total Bids Received</div>
+      </div>
+    </div>
+    <div class="gh-stat-card">
+      <div class="gh-stat-icon bg-warning bg-opacity-10 text-warning"><i class="bi bi-heart fs-4"></i></div>
+      <div>
+        <div class="gh-stat-value">{{ summary.total_watchers|intcomma }}</div>
+        <div class="gh-stat-label">Watchlist Saves</div>
+      </div>
+    </div>
+    <div class="gh-stat-card">
+      <div class="gh-stat-icon bg-success bg-opacity-10 text-success"><i class="bi bi-percent fs-4"></i></div>
+      <div>
+        <div class="gh-stat-value">{{ summary.conversion_rate }}%</div>
+        <div class="gh-stat-label">Conversion Rate</div>
+      </div>
+    </div>
+    <div class="gh-stat-card">
+      <div class="gh-stat-icon bg-primary bg-opacity-10 text-primary"><i class="bi bi-currency-dollar fs-4"></i></div>
+      <div>
+        <div class="gh-stat-value">GHS {{ summary.avg_winning_price_ghs|floatformat:0|intcomma }}</div>
+        <div class="gh-stat-label">Avg Winning Price</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <!-- ── Revenue Trend Chart ─────────────────────────────────── -->
+    <div class="col-lg-8">
+      <div class="gh-chart-card">
+        <h6 class="fw-bold mb-3">Revenue Trend</h6>
+        <canvas id="chart-revenue" height="120"></canvas>
+      </div>
+    </div>
+
+    <!-- ── Category Breakdown ─────────────────────────────────── -->
+    <div class="col-lg-4">
+      <div class="gh-chart-card h-100">
+        <h6 class="fw-bold mb-3">Sales by Category</h6>
+        <canvas id="chart-category" height="180"></canvas>
+      </div>
+    </div>
+
+    <!-- ── Bid Activity Heatmap ────────────────────────────────── -->
+    <div class="col-lg-6">
+      <div class="gh-chart-card">
+        <h6 class="fw-bold mb-3">Bid Activity by Hour of Day</h6>
+        <canvas id="chart-bid-hours" height="120"></canvas>
+      </div>
+    </div>
+
+    <!-- ── Top Performing Listings ───────────────────────────── -->
+    <div class="col-lg-6">
+      <div class="gh-chart-card">
+        <h6 class="fw-bold mb-3">Top Performing Listings</h6>
+        <div class="table-responsive">
+          <table class="table table-sm">
+            <thead><tr><th>Lot</th><th>Title</th><th>Bids</th><th>Views</th><th>Sold For</th></tr></thead>
+            <tbody>
+              {% for item in top_listings %}
+              <tr>
+                <td class="text-muted small">{{ item.lot_number }}</td>
+                <td class="small">{{ item.title|truncatechars:30 }}</td>
+                <td><span class="badge bg-secondary">{{ item.bid_count }}</span></td>
+                <td class="text-muted small">{{ item.view_count|intcomma }}</td>
+                <td class="fw-semibold text-success">GHS {{ item.winning_bid_amount|intcomma }}</td>
+              </tr>
+              {% empty %}
+              <tr><td colspan="5" class="text-center text-muted py-3">No sold items yet</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Market Comparison ──────────────────────────────────── -->
+    {% if user.has_analytics %}
+    <div class="col-12">
+      <div class="gh-chart-card">
+        <h6 class="fw-bold mb-3">Market Trends — Your Category</h6>
+        <canvas id="chart-market" height="80"></canvas>
+      </div>
+    </div>
+    {% else %}
+    <div class="col-12">
+      <div class="gh-chart-card text-center py-5">
+        <i class="bi bi-lock-fill fs-1 text-muted mb-3 d-block"></i>
+        <h6 class="fw-bold">Market Trend Analytics</h6>
+        <p class="text-muted small">Compare your performance against market trends. Available on Silver+ plans.</p>
+        <a href="{% url 'dashboard_subscription' %}" class="btn gh-btn-sell">Upgrade Plan</a>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const GOLD = '#F0A500';
+const NAVY = '#0D1B2A';
+
+// Revenue chart
+const revData = {{ revenue_trend|safe }};
+new Chart(document.getElementById('chart-revenue'), {
+  type: 'line',
+  data: {
+    labels: revData.map(d => d.date),
+    datasets: [{
+      label: 'Revenue (GHS)',
+      data: revData.map(d => d.revenue || 0),
+      borderColor: GOLD,
+      backgroundColor: 'rgba(240,165,0,.1)',
+      fill: true,
+      tension: 0.4,
+      pointBackgroundColor: GOLD,
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: { legend: { display: false } },
+    scales: {
+      y: { beginAtZero: true, grid: { color: '#f1f5f9' } },
+      x: { grid: { display: false } },
+    }
+  }
+});
+
+// Category doughnut
+const catData = {{ category_breakdown|safe }};
+new Chart(document.getElementById('chart-category'), {
+  type: 'doughnut',
+  data: {
+    labels: catData.map(d => d.category__name),
+    datasets: [{
+      data: catData.map(d => d.revenue || 0),
+      backgroundColor: ['#F0A500','#0D1B2A','#06A050','#4F46E5','#D32F2F','#94A3B8'],
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: { legend: { position: 'bottom', labels: { font: { size: 11 } } } }
+  }
+});
+
+// Bid hours bar
+const hourData = {{ bid_hours|safe }};
+const hours = Array.from({length: 24}, (_, i) => `${i}:00`);
+const hourCounts = hours.map((_, i) => {
+  const found = hourData.find(d => d.hour === i);
+  return found ? found.count : 0;
+});
+new Chart(document.getElementById('chart-bid-hours'), {
+  type: 'bar',
+  data: {
+    labels: hours,
+    datasets: [{
+      label: 'Bids',
+      data: hourCounts,
+      backgroundColor: 'rgba(240,165,0,.7)',
+      borderColor: GOLD,
+      borderWidth: 1,
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: { legend: { display: false } },
+    scales: {
+      y: { beginAtZero: true, grid: { color: '#f1f5f9' } },
+      x: { grid: { display: false }, ticks: { font: { size: 10 } } },
+    }
+  }
+});
+
+function changePeriod(days) {
+  window.location.href = `?days=${days}`;
+}
+</script>
+{% endblock %}

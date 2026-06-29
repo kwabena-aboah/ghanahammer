@@ -1,0 +1,253 @@
+{% extends "base/base.html" %}
+{% load static humanize %}
+
+{% block title %}Upgrade Your Plan | MachineAuction{% endblock %}
+
+{% block content %}
+<div class="container-xl py-5">
+
+  <div class="text-center mb-5">
+    <h2 class="fw-bold">Choose Your Plan</h2>
+    <p class="text-muted">Unlock more listings, analytics, early access, and exclusive auction privileges</p>
+    {% if user.plan != 'free' %}
+    <div class="alert alert-info d-inline-block">
+      You're currently on the <strong class="text-capitalize">{{ user.plan }}</strong> plan.
+      {% if user.plan_expiry %}Renews {{ user.plan_expiry|date:"M d, Y" }}.{% endif %}
+    </div>
+    {% endif %}
+  </div>
+
+  <div class="row g-4 justify-content-center mb-5">
+
+    <!-- Free -->
+    <div class="col-md-6 col-lg-3">
+      <div class="gh-plan-card {% if user.plan == 'free' %}border-secondary{% endif %}">
+        <div class="fw-bold fs-5 mb-1">Free</div>
+        <div class="gh-plan-price"><span class="currency">GHS</span>0</div>
+        <div class="gh-plan-period text-muted mb-4">forever</div>
+        <div class="text-start mb-4">
+          <div class="gh-plan-feature"><i class="bi bi-check-circle-fill"></i> 5 active listings</div>
+          <div class="gh-plan-feature"><i class="bi bi-check-circle-fill"></i> Basic bidding</div>
+          <div class="gh-plan-feature text-muted"><i class="bi bi-x-circle"></i> Analytics</div>
+          <div class="gh-plan-feature text-muted"><i class="bi bi-x-circle"></i> Early Access</div>
+          <div class="gh-plan-feature text-muted"><i class="bi bi-x-circle"></i> Bid Credits</div>
+        </div>
+        {% if user.plan == 'free' %}
+        <button class="btn btn-secondary w-100" disabled>Current Plan</button>
+        {% else %}
+        <button class="btn btn-outline-secondary w-100" disabled>Downgrade</button>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Silver -->
+    <div class="col-md-6 col-lg-3">
+      <div class="gh-plan-card">
+        <div class="fw-bold fs-5 mb-1">Silver</div>
+        <div class="gh-plan-price"><span class="currency">GHS</span>50</div>
+        <div class="gh-plan-period text-muted mb-4">/month</div>
+        <div class="text-start mb-4">
+          <div class="gh-plan-feature"><i class="bi bi-check-circle-fill"></i> 20 active listings</div>
+          <div class="gh-plan-feature"><i class="bi bi-check-circle-fill"></i> 100 bid credits</div>
+          <div class="gh-plan-feature"><i class="bi bi-check-circle-fill"></i> Smart Alerts</div>
+          <div class="gh-plan-feature"><i class="bi bi-check-circle-fill"></i> Basic Analytics</div>
+          <div class="gh-plan-feature text-muted"><i class="bi bi-x-circle"></i> Early Access</div>
+        </div>
+        <button class="btn btn-outline-secondary w-100 btn-subscribe"
+          data-plan="silver" data-amount="50" {% if user.plan == 'silver' %}disabled{% endif %}>
+          {% if user.plan == 'silver' %}Current Plan{% else %}Upgrade to Silver{% endif %}
+        </button>
+      </div>
+    </div>
+
+    <!-- Gold (Recommended) -->
+    <div class="col-md-6 col-lg-3">
+      <div class="gh-plan-card recommended">
+        <div class="badge bg-warning text-dark mb-2">Most Popular</div>
+        <div class="fw-bold fs-5 mb-1">Gold</div>
+        <div class="gh-plan-price"><span class="currency">GHS</span>150</div>
+        <div class="gh-plan-period text-muted mb-4">/month</div>
+        <div class="text-start mb-4">
+          <div class="gh-plan-feature"><i class="bi bi-check-circle-fill"></i> 100 active listings</div>
+          <div class="gh-plan-feature"><i class="bi bi-check-circle-fill"></i> 500 bid credits</div>
+          <div class="gh-plan-feature"><i class="bi bi-check-circle-fill"></i> VIP Early Access</div>
+          <div class="gh-plan-feature"><i class="bi bi-check-circle-fill"></i> Full Analytics</div>
+          <div class="gh-plan-feature"><i class="bi bi-check-circle-fill"></i> 1 Featured Listing/mo</div>
+          <div class="gh-plan-feature"><i class="bi bi-check-circle-fill"></i> Smart Alerts</div>
+        </div>
+        <button class="btn gh-btn-sell w-100 btn-subscribe"
+          data-plan="gold" data-amount="150" {% if user.plan == 'gold' %}disabled{% endif %}>
+          {% if user.plan == 'gold' %}Current Plan{% else %}Upgrade to Gold{% endif %}
+        </button>
+      </div>
+    </div>
+
+    <!-- Platinum -->
+    <div class="col-md-6 col-lg-3">
+      <div class="gh-plan-card" style="background: linear-gradient(135deg, var(--gh-navy), var(--gh-navy-light)); color: #fff; border-color: #8B5CF6;">
+        <div class="badge mb-2" style="background: linear-gradient(135deg, #8B5CF6, #6366F1)">Enterprise</div>
+        <div class="fw-bold fs-5 mb-1 text-white">Platinum</div>
+        <div class="gh-plan-price text-white"><span class="currency">GHS</span>400</div>
+        <div class="mb-4 text-muted">/month</div>
+        <div class="text-start mb-4">
+          <div class="gh-plan-feature text-white"><i class="bi bi-check-circle-fill text-success"></i> Unlimited listings</div>
+          <div class="gh-plan-feature text-white"><i class="bi bi-check-circle-fill text-success"></i> Unlimited bid credits</div>
+          <div class="gh-plan-feature text-white"><i class="bi bi-check-circle-fill text-success"></i> All Gold features</div>
+          <div class="gh-plan-feature text-white"><i class="bi bi-check-circle-fill text-success"></i> API Access</div>
+          <div class="gh-plan-feature text-white"><i class="bi bi-check-circle-fill text-success"></i> Auctioneer Dashboard</div>
+          <div class="gh-plan-feature text-white"><i class="bi bi-check-circle-fill text-success"></i> White-Label option</div>
+          <div class="gh-plan-feature text-white"><i class="bi bi-check-circle-fill text-success"></i> Priority Support</div>
+        </div>
+        <button class="btn btn-light w-100 fw-bold btn-subscribe"
+          data-plan="platinum" data-amount="400" {% if user.plan == 'platinum' %}disabled{% endif %}>
+          {% if user.plan == 'platinum' %}Current Plan{% else %}Upgrade to Platinum{% endif %}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── Bid Credits Section ──────────────────────────────────── -->
+  <div class="gh-card p-4 mb-5">
+    <h5 class="fw-bold mb-4"><i class="bi bi-coin me-2 text-gold"></i>Buy Bid Credits</h5>
+    <p class="text-muted small mb-4">Bid credits are required in penny-auction or credit-bid formats. Your balance: <strong>{{ user.bid_credits }} credits</strong></p>
+    <div class="row g-3">
+      {% for pkg in credit_packages %}
+      <div class="col-6 col-md-3">
+        <div class="gh-card p-3 text-center">
+          <div class="fw-bold" style="font-size:1.3rem">{{ pkg.credits }}{% if pkg.bonus_credits %} + {{ pkg.bonus_credits }} bonus{% endif %}</div>
+          <div class="text-muted small mb-2">credits</div>
+          <div class="fw-bold text-gold">GHS {{ pkg.price_ghs }}</div>
+          <button class="btn gh-btn-sell btn-sm w-100 mt-2 btn-buy-credits"
+            data-pkg-id="{{ pkg.id }}" data-amount="{{ pkg.price_ghs }}"
+            data-credits="{{ pkg.credits }}">
+            Buy Now
+          </button>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- ─── FAQ ─────────────────────────────────────────────────── -->
+  <div class="gh-card p-4">
+    <h5 class="fw-bold mb-4">Frequently Asked Questions</h5>
+    <div class="accordion" id="plan-faq">
+      <div class="accordion-item border-0 border-bottom">
+        <h2 class="accordion-header">
+          <button class="accordion-button collapsed fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
+            Can I cancel anytime?
+          </button>
+        </h2>
+        <div id="faq1" class="accordion-collapse collapse" data-bs-parent="#plan-faq">
+          <div class="accordion-body text-muted small">Yes. You can cancel your subscription at any time. Your plan benefits will remain active until the end of your billing period.</div>
+        </div>
+      </div>
+      <div class="accordion-item border-0 border-bottom">
+        <h2 class="accordion-header">
+          <button class="accordion-button collapsed fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
+            What payment methods are accepted?
+          </button>
+        </h2>
+        <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#plan-faq">
+          <div class="accordion-body text-muted small">We accept MTN MoMo, Telecel Cash, AirtelTigo Money, Visa/Mastercard, and bank transfers via Paystack.</div>
+        </div>
+      </div>
+      <div class="accordion-item border-0">
+        <h2 class="accordion-header">
+          <button class="accordion-button collapsed fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
+            What is a commission fee?
+          </button>
+        </h2>
+        <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#plan-faq">
+          <div class="accordion-body text-muted small">GhanaHammer charges a 5% platform commission on successful sales. This is deducted before funds are released to the seller from escrow.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Payment Modal -->
+<div class="modal fade" id="paymentModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header border-0">
+        <h5 class="modal-title fw-bold">Complete Payment</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p class="text-muted small mb-4" id="modal-description"></p>
+        <form id="payment-form" method="post" action="{% url 'subscription_checkout' %}">
+          {% csrf_token %}
+          <input type="hidden" name="plan" id="modal-plan">
+          <input type="hidden" name="amount" id="modal-amount">
+          <input type="hidden" name="pkg_id" id="modal-pkg-id">
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Payment Method</label>
+            <select name="channel_type" class="form-select" id="modal-channel">
+              <option value="card">Visa / Mastercard / Credit Card</option>
+              <option value="mobile_money">Mobile Money (MTN, Telecel, AirtelTigo)</option>
+              <option value="bank_transfer">Bank Transfer</option>
+            </select>
+          </div>
+
+          <div id="momo-fields" class="d-none">
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Network</label>
+              <select name="momo_network" class="form-select">
+                <option value="mtn_momo">MTN MoMo</option>
+                <option value="telecel_cash">Telecel Cash</option>
+                <option value="airteltigo_money">AirtelTigo Money</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-semibold">MoMo Number</label>
+              <input type="tel" name="momo_number" class="form-control" placeholder="e.g. 0241234567">
+            </div>
+          </div>
+
+          <button type="submit" class="btn gh-btn-sell w-100">
+            <i class="bi bi-lock me-2"></i>Pay Securely via Paystack
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Subscribe buttons
+document.querySelectorAll('.btn-subscribe').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const plan = btn.dataset.plan;
+    const amount = btn.dataset.amount;
+    document.getElementById('modal-plan').value = plan;
+    document.getElementById('modal-amount').value = amount;
+    document.getElementById('modal-pkg-id').value = '';
+    document.getElementById('modal-description').textContent =
+      `You are upgrading to the ${plan.charAt(0).toUpperCase()+plan.slice(1)} plan for GHS ${amount}/month.`;
+    new bootstrap.Modal(document.getElementById('paymentModal')).show();
+  });
+});
+
+// Credit purchase buttons
+document.querySelectorAll('.btn-buy-credits').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.getElementById('modal-plan').value = '';
+    document.getElementById('modal-pkg-id').value = btn.dataset.pkgId;
+    document.getElementById('modal-amount').value = btn.dataset.amount;
+    document.getElementById('modal-description').textContent =
+      `Purchasing ${btn.dataset.credits} bid credits for GHS ${btn.dataset.amount}.`;
+    new bootstrap.Modal(document.getElementById('paymentModal')).show();
+  });
+});
+
+// Show/hide MoMo fields
+document.getElementById('modal-channel')?.addEventListener('change', function() {
+  document.getElementById('momo-fields').classList.toggle('d-none', this.value !== 'mobile_money');
+});
+</script>
+{% endblock %}

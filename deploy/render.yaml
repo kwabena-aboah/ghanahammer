@@ -1,0 +1,150 @@
+# GhanaHammer — Deployment Guide
+# ────────────────────────────────────────────────────────────────────────────
+# Supports: Render.com (recommended) and Namecheap Shared Hosting
+
+# ═══════════════════════════════════════════════════════════════
+# OPTION A: RENDER.COM DEPLOYMENT (Recommended)
+# ═══════════════════════════════════════════════════════════════
+# Render supports: Web Service, Background Workers, Redis, PostgreSQL
+
+# render.yaml (Infrastructure as Code)
+services:
+  # ── Web Service ────────────────────────────────────────────
+  - type: web
+    name: ghanahammer-web
+    env: python
+    region: oregon
+    plan: starter
+    buildCommand: |
+      pip install -r requirements.txt &&
+      python manage.py collectstatic --noinput &&
+      python manage.py migrate --noinput
+    startCommand: >
+      gunicorn auction_platform.wsgi:application
+      --bind 0.0.0.0:$PORT
+      --workers 4
+      --worker-class gthread
+      --threads 2
+      --timeout 120
+      --access-logfile -
+      --error-logfile -
+    envVars:
+      - key: DJANGO_SETTINGS_MODULE
+        value: auction_platform.settings.production
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: ghanahammer-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: ghanahammer-redis
+          property: connectionString
+      - key: ALLOWED_HOSTS
+        value: ghanahammer.onrender.com,ghanahammer.com,www.ghanahammer.com
+      - key: DEBUG
+        value: "False"
+      - key: PAYSTACK_SECRET_KEY
+        sync: false    # Set manually in Render dashboard
+      - key: PAYSTACK_PUBLIC_KEY
+        sync: false
+      - key: EMAIL_HOST_USER
+        sync: false
+      - key: EMAIL_HOST_PASSWORD
+        sync: false
+      - key: WHATSAPP_API_TOKEN
+        sync: false
+      - key: WHATSAPP_PHONE_NUMBER_ID
+        sync: false
+
+  # ── Celery Worker ──────────────────────────────────────────
+  - type: worker
+    name: ghanahammer-worker
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: celery -A auction_platform.celery worker --loglevel=info --concurrency=2
+    envVars:
+      - key: DJANGO_SETTINGS_MODULE
+        value: auction_platform.settings.production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: ghanahammer-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: ghanahammer-redis
+          property: connectionString
+
+  # ── Celery Beat Scheduler ──────────────────────────────────
+  - type: worker
+    name: ghanahammer-beat
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: celery -A auction_platform.celery beat --loglevel=info --scheduler django_celery_beat.schedulers:DatabaseScheduler
+    envVars:
+      - key: DJANGO_SETTINGS_MODULE
+        value: auction_platform.settings.production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: ghanahammer-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: ghanahammer-redis
+          property: connectionString
+
+  # ── Daphne ASGI (WebSocket) ────────────────────────────────
+  # For WebSockets, use Daphne instead of Gunicorn:
+  # startCommand: daphne -b 0.0.0.0 -p $PORT auction_platform.asgi:application
+  # Or use Gunicorn with uvicorn worker:
+  # startCommand: gunicorn auction_platform.asgi:application -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:$PORT
+
+databases:
+  - name: ghanahammer-db
+    databaseName: ghanahammer
+    user: ghanahammer
+    plan: starter
+
+  - name: ghanahammer-redis
+    plan: starter
+
+
+# ═══════════════════════════════════════════════════════════════
+# OPTION B: NAMECHEAP SHARED HOSTING
+# ═══════════════════════════════════════════════════════════════
+# Note: Shared hosting does NOT support WebSockets or Celery workers.
+# For full features (real-time bidding, auto-close tasks), use VPS or Render.
+# Namecheap works for a static/polling version.
+
+# Steps for Namecheap cPanel + Python App:
+# 1. Create Python App in cPanel (Python 3.11+)
+# 2. Set application root to: /home/username/ghanahammer
+# 3. Set application URL: yourdomain.com
+# 4. Set startup file: passenger_wsgi.py
+# 5. Set application entry point: application
+
+# passenger_wsgi.py content:
+"""
+import sys, os
+sys.path.insert(0, os.path.dirname(__file__))
+os.environ['DJANGO_SETTINGS_MODULE'] = 'auction_platform.settings.production'
+from django.core.wsgi import get_wsgi_application
+application = get_wsgi_application()
+"""
+
+# .htaccess for Namecheap:
+"""
+PassengerEnabled On
+PassengerPython /home/username/virtualenv/ghanahammer/bin/python3
+PassengerAppRoot /home/username/ghanahammer
+PassengerBaseURI /
+"""
+
+
+# ═══════════════════════════════════════════════════════════════
+# .env TEMPLATE (copy to .env and fill in values)
+# ═══════════════════════════════════════════════════════════════
