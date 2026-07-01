@@ -1,0 +1,40 @@
+services:
+  # Django Web Service
+  - type: web
+    name: ghanahammer
+    env: python
+
+    buildCommand: |
+      pip install -r requirements.txt
+      python manage.py collectstatic --noinput
+      python manage.py migrate
+
+    startCommand: gunicorn ghanahammer.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --timeout 60
+
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+
+      - key: DEBUG
+        value: "False"
+
+      - key: ALLOWED_HOSTS
+        value: "machineauction.onrender.com"
+
+      - key: DATABASE_URL
+        sync: false
+
+      - key: WHATSAPP_API_TOKEN
+        sync: false
+
+      - key: WHATSAPP_PHONE_NUMBER_ID
+        sync: false
+
+      - key: WHATSAPP_VERIFY_TOKEN
+        sync: false
+
+      - key: CHURCH_NAME
+        value: "MachineAuction"
+
+      - key: CHURCH_TAGLINE
+        value: "Ghana's Premier Auction Platform"
