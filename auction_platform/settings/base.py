@@ -115,7 +115,7 @@ ASGI_APPLICATION = 'auction_platform.asgi.application'
 # Database
 DATABASES = {
     'default': dj_database_url.config(
-        default=config('DATABASE_URL', default=f'sqlite:///{BASE_DIR}/db.sqlite3'),
+        default=config('DATABASE_URL', default=""),
         conn_max_age=600,
     )
 }
@@ -156,9 +156,12 @@ USE_TZ = True
 # FORCE_SCRIPT_NAME = '/ghanahammer'
 
 # Tell the template engine where to route asset requests
-STATIC_URL = '/static/'
-STATIC_ROOT = BASE_DIR / 'staticfiles'
-STATICFILES_DIRS = [BASE_DIR / 'static']
+STATIC_URL = "/static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"
+
+STATICFILES_DIRS = [
+    BASE_DIR / "static",
+]
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 MEDIA_URL = '/media/'

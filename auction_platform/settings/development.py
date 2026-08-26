@@ -4,12 +4,12 @@ DEBUG = True
 ALLOWED_HOSTS = ['*']
 
 # Use SQLite in dev
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
-}
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
+#     }
+# }
 
 # In-memory channel layer for dev (no Redis required)
 CHANNEL_LAYERS = {
