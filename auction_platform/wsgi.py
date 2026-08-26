@@ -12,3 +12,5 @@ os.environ.setdefault(
     'auction_platform.settings.development',
 )
 application = get_wsgi_application()
+
+app = application
