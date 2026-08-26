@@ -15,10 +15,16 @@ SECRET_KEY = config('SECRET_KEY', default='1234567890-MOPINUYBHVGTRFCDEXSWQAZqaz
 DEBUG = config('DEBUG', default=True, cast=bool)
 
 ALLOWED_HOSTS = config(
-    'ALLOWED_HOSTS',
-    default='localhost,127.0.0.1,app.denkyembo.com',
-    cast=Csv(),
-)
+    "ALLOWED_HOSTS",
+    default="localhost,127.0.0.1,.vercel.app"
+).split(",")
+
+ALLOWED_HOSTS = [
+    host.strip()
+    for host in ALLOWED_HOSTS
+    if host.strip()
+]
+
 CSRF_TRUSTED_ORIGINS = config(
     'CSRF_TRUSTED_ORIGINS',
     default='',
@@ -355,9 +361,87 @@ CACHES = {
 IS_VERCEL = os.environ.get("VERCEL") == "1"
 
 if IS_VERCEL:
-    # Vercel filesystem is read-only except /tmp
-    LOG_DIR = "/tmp/logs"
-else:
-    LOG_DIR = BASE_DIR / "logs"
 
-os.makedirs(LOG_DIR, exist_ok=True)
+    LOGGING = {
+        "version": 1,
+        "disable_existing_loggers": False,
+
+        "formatters": {
+            "verbose": {
+                "format": "{levelname} {asctime} {module} {process:d} {thread:d} {message}",
+                "style": "{",
+            },
+            "simple": {
+                "format": "{levelname}: {message}",
+                "style": "{",
+            },
+        },
+
+        "handlers": {
+            "console": {
+                "class": "logging.StreamHandler",
+                "formatter": "verbose",
+            },
+        },
+
+        "root": {
+            "handlers": ["console"],
+            "level": "INFO",
+        },
+
+        "loggers": {
+            "django": {
+                "handlers": ["console"],
+                "level": "INFO",
+                "propagate": False,
+            },
+
+            "django.request": {
+                "handlers": ["console"],
+                "level": "ERROR",
+                "propagate": False,
+            },
+
+            "auction_platform": {
+                "handlers": ["console"],
+                "level": "INFO",
+                "propagate": False,
+            },
+        },
+    }
+
+else:
+
+    LOG_DIR = BASE_DIR / "logs"
+    os.makedirs(LOG_DIR, exist_ok=True)
+
+    LOGGING = {
+        "version": 1,
+        "disable_existing_loggers": False,
+
+        "formatters": {
+            "verbose": {
+                "format": "{levelname} {asctime} {module} {process:d} {thread:d} {message}",
+                "style": "{",
+            },
+        },
+
+        "handlers": {
+            "file": {
+                "level": "INFO",
+                "class": "logging.FileHandler",
+                "filename": LOG_DIR / "django.log",
+                "formatter": "verbose",
+            },
+
+            "console": {
+                "class": "logging.StreamHandler",
+                "formatter": "verbose",
+            },
+        },
+
+        "root": {
+            "handlers": ["console", "file"],
+            "level": "INFO",
+        },
+    }
