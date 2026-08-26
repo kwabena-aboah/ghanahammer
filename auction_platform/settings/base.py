@@ -3,6 +3,7 @@ GhanaHammer Auction Platform - Base Settings
 Ghana's Premier Online Auction Marketplace
 """
 import os
+import sys
 from pathlib import Path
 from decouple import config, Csv
 import dj_database_url
@@ -321,31 +322,42 @@ CACHES = {
     }
 }
 # Error logging
-LOG_DIR = os.path.join(BASE_DIR, "logs")
-os.makedirs(LOG_DIR, exist_ok=True)
+# LOG_DIR = os.path.join(BASE_DIR, "logs")
+# os.makedirs(LOG_DIR, exist_ok=True)
 
-LOGGING = {
-    "version": 1,
-    "disable_existing_loggers": False,
-    "formatters": {
-        "verbose": {
-            "format": "{levelname} {asctime} {module} {process:d} {thread:d} {message}",
-            "style": "{",
-        },
-    },
-    "handlers": {
-        "django_file": {
-            "level": "ERROR",
-            "class": "logging.FileHandler",
-            "filename": os.path.join(LOG_DIR, "django_errors.log"),
-            "formatter": "verbose",
-        },
-    },
-    "loggers": {
-        "django": {
-            "handlers": ["django_file"],
-            "level": "ERROR",
-            "propagate": False,
-        },
-    },
-}
+# LOGGING = {
+#     "version": 1,
+#     "disable_existing_loggers": False,
+#     "formatters": {
+#         "verbose": {
+#             "format": "{levelname} {asctime} {module} {process:d} {thread:d} {message}",
+#             "style": "{",
+#         },
+#     },
+#     "handlers": {
+#         "django_file": {
+#             "level": "ERROR",
+#             "class": "logging.FileHandler",
+#             "filename": os.path.join(LOG_DIR, "django_errors.log"),
+#             "formatter": "verbose",
+#         },
+#     },
+#     "loggers": {
+#         "django": {
+#             "handlers": ["django_file"],
+#             "level": "ERROR",
+#             "propagate": False,
+#         },
+#     },
+# }
+
+# Detect Vercel/serverless environment
+IS_VERCEL = os.environ.get("VERCEL") == "1"
+
+if IS_VERCEL:
+    # Vercel filesystem is read-only except /tmp
+    LOG_DIR = "/tmp/logs"
+else:
+    LOG_DIR = BASE_DIR / "logs"
+
+os.makedirs(LOG_DIR, exist_ok=True)
