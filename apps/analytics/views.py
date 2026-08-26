@@ -16,11 +16,6 @@ def decimal_default(obj):
 
 @login_required
 def seller_analytics(request):
-    if not request.user.has_analytics:
-        from django.contrib import messages
-        from django.shortcuts import redirect
-        messages.warning(request, 'Analytics are available on Silver plan and above.')
-        return redirect('dashboard_subscription')
 
     days = int(request.GET.get('days', 30))
     service = SellerAnalyticsService()

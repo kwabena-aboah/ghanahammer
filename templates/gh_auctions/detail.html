@@ -175,17 +175,23 @@
               Member since {{ auction.seller.date_joined|date:"Y" }}
             </div>
           </div>
+          {% if user.is_authenticated %}
           <a href="{% url 'messaging_start' seller_id=auction.seller.id auction_id=auction.id %}"
              class="btn btn-outline-secondary btn-sm ms-auto">
             <i class="bi bi-chat me-1"></i> Message Seller
           </a>
+          {% else %}
+          <span class="text-muted small ms-auto">
+            <i class="bi bi-lock me-1"></i> Sign in to message the seller
+          </span>
+          {% endif %}
         </div>
       </div>
 
       <!-- Q&A Section -->
       <div class="gh-card p-4">
         <h6 class="fw-bold mb-3">Questions & Answers</h6>
-        {% for qa in auction.questions.filter(is_public=True) %}
+        {% for qa in public_questions %}
         <div class="mb-3">
           <div class="small"><strong>Q:</strong> {{ qa.question }}</div>
           {% if qa.answer %}
@@ -248,8 +254,25 @@
         {% endif %}
       </div>
 
-      <!-- Vue Bidding App -->
-      <div id="gh-bidding-app"></div>
+      <!-- Anonymous bid form is server-rendered so it works without Vue/WebSocket. -->
+      {% if auction.is_active and not user.is_authenticated and not is_seller %}
+      <form id="anonymous-bid-form" class="gh-card p-3 mb-3">
+        {% csrf_token %}
+        <div class="fw-semibold mb-2"><i class="bi bi-hammer me-1"></i>Place Bid</div>
+        <div id="anonymous-bid-message" class="alert d-none py-2 small"></div>
+        <input type="hidden" name="auction_id" value="{{ auction.id }}">
+        <input class="form-control form-control-sm mb-2" name="bidder_name" placeholder="Full name" required>
+        <input class="form-control form-control-sm mb-2" name="bidder_email" type="email" placeholder="Email address" required>
+        <input class="form-control form-control-sm mb-2" name="bidder_phone" type="tel" placeholder="Phone number" required>
+        <textarea class="form-control form-control-sm mb-2" name="pickup_notes" rows="2" placeholder="Inspection or pickup notes (optional)"></textarea>
+        <label class="form-label small text-muted mb-1">Your bid (minimum GHS {{ auction.min_next_bid }})</label>
+        <input class="form-control mb-2" name="amount" type="number" min="{{ auction.min_next_bid }}" step="0.01" value="{{ auction.min_next_bid }}" required>
+        <button class="btn gh-btn-bid w-100" type="submit"><i class="bi bi-hammer me-1"></i>Place Bid</button>
+      </form>
+      {% endif %}
+
+      <!-- Vue panel remains available for signed-in users. -->
+      <div id="gh-bidding-app"{% if not user.is_authenticated %} class="d-none"{% endif %}></div>
 
     </div>
   </div>
@@ -261,7 +284,7 @@
     <div class="row g-3">
       {% for rel in related_auctions %}
       <div class="col-6 col-md-3">
-        {% include "auctions/partials/auction_card.html" with auction=rel %}
+        {% include "gh_auctions/partials/auction_card.html" with auction=rel %}
       </div>
       {% endfor %}
     </div>
@@ -271,6 +294,7 @@
 </div>
 
 <!-- Inject auction data for Vue -->
+<form class="d-none">{% csrf_token %}</form>
 <script>
 window.GH_AUCTION = {
   id: "{{ auction.id }}",
@@ -281,7 +305,6 @@ window.GH_AUCTION = {
   status: "{{ auction.status }}",
   end_time: "{{ auction.end_time|date:'c' }}",
   min_next_bid: "{{ auction.min_next_bid }}",
-  buy_now_price: "{% if auction.buy_now_price %}{{ auction.buy_now_price }}{% else %}{% endif %}",
   reserve_met: {{ auction.is_reserve_met|yesno:"true,false" }},
   is_authenticated: {{ user.is_authenticated|yesno:"true,false" }},
   is_seller: {{ is_seller|yesno:"true,false" }},
@@ -292,5 +315,51 @@ window.GH_AUCTION = {
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'js/bidding-app.js' %}"></script>
+<script src="{% static 'js/bidding-app.js' %}?v=20260813"></script>
+<script>
+document.getElementById('anonymous-bid-form')?.addEventListener('submit', async function (event) {
+  event.preventDefault();
+  const form = event.currentTarget;
+  let message = document.getElementById('anonymous-bid-message');
+  if (!message) {
+    message = document.createElement('div');
+    message.id = 'anonymous-bid-message';
+    form.prepend(message);
+  }
+  const button = form.querySelector('button[type="submit"]');
+  const payload = Object.fromEntries(new FormData(form).entries());
+
+  button.disabled = true;
+  button.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Placing…';
+  message.className = 'alert d-none py-2 small';
+
+  try {
+    const response = await fetch('/api/v1/bidding/place/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': payload.csrfmiddlewaretoken,
+      },
+      body: JSON.stringify(payload),
+    });
+    const result = await response.json();
+    message.textContent = result.success
+      ? 'Your bid was placed successfully.'
+      : (result.message || 'Your bid could not be placed.');
+    message.className = `alert py-2 small ${result.success ? 'alert-success' : 'alert-danger'}`;
+    if (result.success) {
+      button.textContent = 'Bid Placed';
+      form.querySelector('[name="amount"]').value = result.data.min_next_bid;
+    } else {
+      button.disabled = false;
+      button.innerHTML = '<i class="bi bi-hammer me-1"></i>Place Bid';
+    }
+  } catch (error) {
+    message.textContent = 'Network error. Please try again.';
+    message.className = 'alert alert-danger py-2 small';
+    button.disabled = false;
+    button.innerHTML = '<i class="bi bi-hammer me-1"></i>Place Bid';
+  }
+});
+</script>
 {% endblock %}

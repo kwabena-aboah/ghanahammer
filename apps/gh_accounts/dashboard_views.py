@@ -1,6 +1,9 @@
 """apps/accounts/dashboard_views.py — Seller/Buyer Dashboard"""
 from django.shortcuts import render, redirect
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
+
+
+staff_member_required = user_passes_test(lambda user: user.is_staff)
 from django.contrib import messages
 from django.core.paginator import Paginator
 from django.db.models import Sum, Count, Q
@@ -122,6 +125,24 @@ def my_bids(request):
         'status_filter': status_filter,
         'bid_statuses': Bid.STATUS_CHOICES,
         'total_count': paginator.count,
+    })
+
+
+@staff_member_required
+def active_bids(request):
+    """Show current winning bids to staff for inspection and pickup follow-up."""
+    from apps.bidding.models import Bid
+
+    bids = Bid.objects.filter(
+        status=Bid.STATUS_WINNING,
+        auction__status__in=['active', 'extended', 'closing'],
+    ).select_related(
+        'auction', 'auction__seller', 'bidder'
+    ).order_by('auction__end_time', '-amount')
+
+    return render(request, 'dashboard/active_bids.html', {
+        'bids': bids,
+        'total_count': bids.count(),
     })
 
 

@@ -14,7 +14,10 @@ logger = logging.getLogger(__name__)
 class BiddingService:
     """Central service for all bidding operations"""
 
-    def place_bid(self, auction_id, bidder, amount, ip_address=None, user_agent=''):
+    def place_bid(
+        self, auction_id, bidder, amount, ip_address=None, user_agent='',
+        bidder_name='', bidder_email='', bidder_phone='', pickup_notes='',
+    ):
         """
         Place a manual bid. Handles:
         - Validation
@@ -27,6 +30,17 @@ class BiddingService:
         from apps.bidding.models import Bid, AutoBid
         from apps.notifications.services import NotificationService
 
+        bidder_name = (bidder_name or '').strip()
+        bidder_email = (bidder_email or '').strip()
+        bidder_phone = (bidder_phone or '').strip()
+        pickup_notes = (pickup_notes or '').strip()
+        if bidder is None and (not bidder_name or not bidder_email or not bidder_phone):
+            return {'success': False, 'message': 'Name, email, and phone are required for anonymous bids.'}
+        if bidder is not None:
+            bidder_name = bidder.get_full_name() or bidder.username
+            bidder_email = bidder.email
+            bidder_phone = bidder_phone or bidder.phone
+
         try:
             with transaction.atomic():
                 auction = Auction.objects.select_for_update().get(id=auction_id)
@@ -37,7 +51,7 @@ class BiddingService:
                     return {'success': False, 'message': 'This auction is not currently active.'}
                 if auction.end_time <= timezone.now():
                     return {'success': False, 'message': 'This auction has ended.'}
-                if auction.seller_id == bidder.id:
+                if bidder is not None and auction.seller_id == bidder.id:
                     return {'success': False, 'message': 'You cannot bid on your own listing.'}
                 if amount < auction.min_next_bid:
                     return {
@@ -50,7 +64,8 @@ class BiddingService:
                 # Fraud scoring
                 fraud_score, fraud_flags = self._calculate_fraud_score(auction, bidder, amount, ip_address)
                 if fraud_score >= 0.9:
-                    self._create_fraud_flag(auction, bidder, fraud_flags)
+                    if bidder is not None:
+                        self._create_fraud_flag(auction, bidder, fraud_flags)
                     return {'success': False, 'message': 'Bid could not be processed. Please contact support.'}
 
                 # Outbid previous winning bidder
@@ -65,6 +80,10 @@ class BiddingService:
                 bid = Bid.objects.create(
                     auction=auction,
                     bidder=bidder,
+                    bidder_name=bidder_name,
+                    bidder_email=bidder_email,
+                    bidder_phone=bidder_phone,
+                    pickup_notes=pickup_notes,
                     amount=amount,
                     status=Bid.STATUS_WINNING,
                     source=Bid.SOURCE_MANUAL,
@@ -92,24 +111,26 @@ class BiddingService:
                 auction.save(update_fields=['current_price', 'bid_count', 'reserve_met'])
 
                 # Notify previous bidder they were outbid
-                if previous_winning_bid:
+                if previous_winning_bid and previous_winning_bid.bidder:
                     NotificationService.notify_outbid(
                         user=previous_winning_bid.bidder,
                         auction=auction,
                         new_amount=amount,
                     )
 
-                # Trigger auto-bidder for other bidders
+                # Account-based auto-bidders can still respond to guest bids.
                 self._trigger_auto_bids(auction, bidder, amount)
 
-                # Update bidder stats
-                bidder.total_bids += 1
-                bidder.save(update_fields=['total_bids'])
+                # Guest bids are tracked on their bid contact details.
+                if bidder is not None:
+                    bidder.total_bids += 1
+                    bidder.save(update_fields=['total_bids'])
 
                 bid_data = {
                     'bid_id': str(bid.id),
                     'amount': str(amount),
-                    'bidder': bidder.get_full_name() or bidder.username,
+                    'bidder': bidder_name,
+
                     'bid_count': auction.bid_count,
                     'current_price': str(auction.current_price),
                     'end_time': auction.end_time.isoformat(),
@@ -119,7 +140,10 @@ class BiddingService:
                     'placed_at': bid.placed_at.isoformat(),
                 }
 
-                logger.info(f"Bid placed: GHS {amount} on {auction.lot_number} by {bidder.email}")
+                logger.info(
+                    f"Bid placed: GHS {amount} on {auction.lot_number} "
+                    f"by {bidder_email or bidder_name}"
+                )
                 return {'success': True, 'data': bid_data, 'bid': bid}
 
         except Exception as e:
@@ -130,6 +154,9 @@ class BiddingService:
         """Set or update auto-bid proxy maximum"""
         from apps.gh_auctions.models import Auction
         from apps.bidding.models import AutoBid
+
+        if bidder is None:
+            return {'success': False, 'message': 'Sign in to use auto-bidding.'}
 
         try:
             auction = Auction.objects.get(id=auction_id)
@@ -298,7 +325,7 @@ class BiddingService:
                 flags.append('seller_same_ip')
 
         # Seller bidding (rare but check)
-        if hasattr(auction, 'seller_id') and auction.seller_id == bidder.id:
+        if bidder is not None and hasattr(auction, 'seller_id') and auction.seller_id == bidder.id:
             score = 1.0
             flags.append('self_bid')
 
@@ -311,6 +338,7 @@ class BiddingService:
 
     def _create_fraud_flag(self, auction, bidder, flags):
         from apps.bidding.models import FraudFlag
+
         for flag in flags:
             FraudFlag.objects.create(
                 user=bidder,

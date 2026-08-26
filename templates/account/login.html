@@ -1,71 +1,100 @@
 {% extends "base/auth_base.html" %}
 {% load i18n %}
-{% load allauth account %}
+
 {% block head_title %}
     {% trans "Sign In" %}
 {% endblock head_title %}
+
 {% block content %}
 <div class="auth-hero-content">
     <div class="auth-card">
-    {% element h1 %}
-        <h1 class="auth-title">{% trans "Sign In" %}</h1>
-    {% endelement %}
-    {% if not SOCIALACCOUNT_ONLY %}
-        {% setvar link %}
-            <a href="{{ signup_url }}">
-            {% endsetvar %}
-            {% setvar end_link %}
-            </a>
-        {% endsetvar %}
-        {% element p %}
-        <div class="auth-footer">
-            {% blocktranslate %}If you have not created an account yet, then please {{ link }}sign up{{ end_link }} first.{% endblocktranslate %}
+
+        <h1 class="auth-title">
+            {% trans "Sign In" %}
+        </h1>
+
+        <div class="auth-footer text-muted small mb-3">
+            Administrator access only. Accounts are created by an administrator.
         </div>
-        {% endelement %}
+
         {% url 'account_login' as login_url %}
-        {% element form form=form method="post" action=login_url tags="entrance,login" %}
-            {% slot body %}
-                {% csrf_token %}
-                {% element fields form=form unlabeled=True %}
-                {% endelement %}
-                {{ redirect_field }}
-            {% endslot %}
-            {% slot actions %}
-                {% element button type="submit" tags="prominent,login" name="submit" %}
-                    <i class="bi bi-plus-circle me-2"></i>{% trans "Sign In" %}
-                {% endelement %}
-            {% endslot %}
-        {% endelement %}
-    {% endif %}
-    <div class="auth-footer">
-    {% if LOGIN_BY_CODE_ENABLED or PASSKEY_LOGIN_ENABLED %}
-        {% element hr %}
-        {% endelement %}
-        {% element button_group vertical=True %}
-            {% if PASSKEY_LOGIN_ENABLED %}
-                {% element button type="submit" form="mfa_login" id="passkey_login" tags="prominent,login,outline,primary" %}
-                    {% trans "Sign in with a passkey" %}
-                {% endelement %}
-            {% endif %}
-            {% if LOGIN_BY_CODE_ENABLED %}
-                {% element button href=request_login_code_url tags="prominent,login,outline,primary" %}
-                    {% trans "Send me a sign-in code" %}
-                {% endelement %}
-            {% endif %}
-        {% endelement %}
-    {% endif %}
-    {% if SOCIALACCOUNT_ENABLED %}
-        {% include "socialaccount/snippets/login.html" with page_layout="entrance" %}
-    {% endif %}
-    <div style="margin-top:15px; font-size:12px; color:#8892a0;">
-	    🔒 Secure login • Verified marketplace • Paystack protected
-	</div>
-	</div>
-	</div>
+
+        <form method="post" action="{{ login_url }}" class="login-form">
+            {% csrf_token %}
+
+            {{ form.non_field_errors }}
+
+            {% for field in form %}
+                <div class="mb-3">
+
+                    {{ field.errors }}
+
+                    <label for="{{ field.id_for_label }}" class="form-label">
+                        {{ field.label }}
+                    </label>
+
+                    {{ field }}
+
+                    {% if field.help_text %}
+                        <div class="form-text">
+                            {{ field.help_text }}
+                        </div>
+                    {% endif %}
+
+                </div>
+            {% endfor %}
+
+            {{ redirect_field }}
+
+            <button
+                type="submit"
+                class="btn btn-primary w-100"
+                name="submit"
+            >
+                <i class="bi bi-box-arrow-in-right me-2"></i>
+                {% trans "Sign In" %}
+            </button>
+        </form>
+
+        {% if LOGIN_BY_CODE_ENABLED or PASSKEY_LOGIN_ENABLED %}
+            <div class="auth-footer mt-4">
+
+                <hr>
+
+                {% if PASSKEY_LOGIN_ENABLED %}
+                    <button
+                        type="submit"
+                        form="mfa_login"
+                        id="passkey_login"
+                        class="btn btn-outline-primary w-100 mb-2"
+                    >
+                        {% trans "Sign in with a passkey" %}
+                    </button>
+                {% endif %}
+
+                {% if LOGIN_BY_CODE_ENABLED %}
+                    <a
+                        href="{{ request_login_code_url }}"
+                        class="btn btn-outline-primary w-100"
+                    >
+                        {% trans "Send me a sign-in code" %}
+                    </a>
+                {% endif %}
+
+            </div>
+        {% endif %}
+
+        <div style="margin-top:15px; font-size:12px; color:#8892a0;">
+            🔒 Secure login • Verified marketplace • Paystack protected
+        </div>
+
+    </div>
 </div>
 {% endblock content %}
+
 {% block extra_body %}
     {{ block.super }}
+
     {% if PASSKEY_LOGIN_ENABLED %}
         {% include "mfa/webauthn/snippets/login_script.html" with button_id="passkey_login" %}
     {% endif %}

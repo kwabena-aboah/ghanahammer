@@ -15,7 +15,7 @@ _paystack = PaystackService()
 def subscription_checkout(request):
     """Handle subscription plan and bid credit payment initiation"""
     if request.method != 'POST':
-        return redirect('dashboard_subscription')
+        return redirect('dashboard')
 
     plan = request.POST.get('plan', '')
     amount_str = request.POST.get('amount', '0')
@@ -28,7 +28,7 @@ def subscription_checkout(request):
         amount = float(amount_str)
     except (ValueError, TypeError):
         messages.error(request, 'Invalid amount.')
-        return redirect('dashboard_subscription')
+        return redirect('dashboard')
 
     if pkg_id:
         from apps.bidding.models import BidCreditPackage
@@ -38,7 +38,7 @@ def subscription_checkout(request):
             payment_type = Payment.TYPE_CREDITS
         except BidCreditPackage.DoesNotExist:
             messages.error(request, 'Credit package not found.')
-            return redirect('dashboard_subscription')
+            return redirect('dashboard')
     else:
         payment_type = Payment.TYPE_SUBSCRIPTION
 
@@ -59,10 +59,10 @@ def subscription_checkout(request):
         if result['success'] and result.get('requires_action'):
             request.session['pending_momo_reference'] = payment.paystack_reference
             messages.info(request, result.get('message', 'Approve payment on your phone.'))
-            return redirect('dashboard_subscription')
+            return redirect('dashboard')
         elif not result['success']:
             messages.error(request, result.get('message', 'Mobile money charge failed.'))
-            return redirect('dashboard_subscription')
+            return redirect('dashboard')
 
     elif channel_type == 'bank_transfer':
         result = _paystack.create_dedicated_virtual_account(payment)
@@ -82,10 +82,10 @@ def subscription_checkout(request):
                 f'(ref: {payment.paystack_reference}). '
                 f'Your plan activates once payment clears.'
             )
-            return redirect('dashboard_subscription')
+            return redirect('dashboard')
         else:
             messages.error(request, result.get('message', 'Could not create bank account.'))
-            return redirect('dashboard_subscription')
+            return redirect('dashboard')
 
     else:
         result = _paystack.initialize_transaction(payment, callback_url, channel_type)
@@ -93,4 +93,4 @@ def subscription_checkout(request):
             return redirect(result['authorization_url'])
         messages.error(request, result.get('message', 'Payment initialization failed.'))
 
-    return redirect('dashboard_subscription')
+    return redirect('dashboard')

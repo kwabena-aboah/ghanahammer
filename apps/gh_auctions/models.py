@@ -142,6 +142,10 @@ class Auction(models.Model):
         settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
         null=True, blank=True, related_name='won_auctions'
     )
+    winner_name = models.CharField(max_length=150, blank=True)
+    winner_email = models.EmailField(blank=True)
+    winner_phone = models.CharField(max_length=30, blank=True)
+    winner_pickup_notes = models.TextField(blank=True)
     winning_bid_amount = models.DecimalField(max_digits=14, decimal_places=2, null=True, blank=True)
     reserve_met = models.BooleanField(default=False)
     

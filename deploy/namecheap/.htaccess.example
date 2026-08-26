@@ -1,0 +1,5 @@
+# Copy to the application root as .htaccess after replacing the paths.
+PassengerEnabled On
+PassengerAppRoot /home/CPANEL_USER/ghanahammer
+PassengerBaseURI /
+PassengerPython /home/CPANEL_USER/virtualenv/ghanahammer/3.11/bin/python

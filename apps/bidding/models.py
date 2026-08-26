@@ -39,7 +39,14 @@ class Bid(models.Model):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     auction = models.ForeignKey('gh_auctions.Auction', on_delete=models.PROTECT, related_name='bids')
-    bidder = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name='bids')
+    bidder = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.PROTECT,
+        related_name='bids', null=True, blank=True,
+    )
+    bidder_name = models.CharField(max_length=150, blank=True)
+    bidder_email = models.EmailField(blank=True)
+    bidder_phone = models.CharField(max_length=30, blank=True)
+    pickup_notes = models.TextField(blank=True)
     amount = models.DecimalField(max_digits=14, decimal_places=2)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_ACTIVE)
     source = models.CharField(max_length=20, choices=SOURCE_CHOICES, default=SOURCE_MANUAL)
@@ -66,7 +73,8 @@ class Bid(models.Model):
         ]
 
     def __str__(self):
-        return f"GHS {self.amount} on {self.auction.lot_number} by {self.bidder.username}"
+        bidder_label = self.bidder.username if self.bidder else self.bidder_name or self.bidder_email
+        return f"GHS {self.amount} on {self.auction.lot_number} by {bidder_label}"
 
 
 class AutoBid(models.Model):

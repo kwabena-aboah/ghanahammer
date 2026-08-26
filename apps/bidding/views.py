@@ -8,18 +8,28 @@ from apps.bidding.services import BiddingService
 service = BiddingService()
 
 
-@login_required
 @require_POST
 def place_bid_api(request):
-    data = json.loads(request.body)
+    try:
+        data = json.loads(request.body or '{}')
+    except (TypeError, ValueError):
+        return JsonResponse({'success': False, 'message': 'Invalid bid request.'}, status=400)
+
     result = service.place_bid(
         auction_id=data.get('auction_id'),
-        bidder=request.user,
+        bidder=request.user if request.user.is_authenticated else None,
         amount=data.get('amount'),
+        bidder_name=data.get('bidder_name', ''),
+        bidder_email=data.get('bidder_email', ''),
+        bidder_phone=data.get('bidder_phone', ''),
+        pickup_notes=data.get('pickup_notes', ''),
         ip_address=request.META.get('REMOTE_ADDR'),
         user_agent=request.META.get('HTTP_USER_AGENT', ''),
     )
-    return JsonResponse(result)
+    # The service keeps the Bid instance for internal callers, but it cannot
+    # be serialized in a JSON response.
+    result.pop('bid', None)
+    return JsonResponse(result, status=200 if result.get('success') else 400)
 
 
 @login_required
@@ -30,16 +40,5 @@ def set_auto_bid_api(request):
         auction_id=data.get('auction_id'),
         bidder=request.user,
         max_amount=data.get('max_amount'),
-    )
-    return JsonResponse(result)
-
-
-@login_required
-@require_POST
-def buy_now_api(request):
-    data = json.loads(request.body)
-    result = service.process_buy_now(
-        auction_id=data.get('auction_id'),
-        buyer=request.user,
     )
     return JsonResponse(result)

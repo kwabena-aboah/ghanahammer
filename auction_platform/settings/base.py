@@ -9,11 +9,20 @@ import dj_database_url
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
-SECRET_KEY = config('SECRET_KEY', default='django-insecure-change-this-in-production-ghanahammer-2026')
+SECRET_KEY = config('SECRET_KEY', default='1234567890-MOPINUYBHVGTRFCDEXSWQAZqazxswedcvfrtgbnhyujmkiolp[]+_)(*&ˆ%$#@!±§][}{/?>')
 
-DEBUG = config('DEBUG', default=False, cast=bool)
+DEBUG = config('DEBUG', default=True, cast=bool)
 
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1', cast=Csv())
+ALLOWED_HOSTS = config(
+    'ALLOWED_HOSTS',
+    default='localhost,127.0.0.1,app.denkyembo.com',
+    cast=Csv(),
+)
+CSRF_TRUSTED_ORIGINS = config(
+    'CSRF_TRUSTED_ORIGINS',
+    default='',
+    cast=Csv(),
+)
 
 DJANGO_APPS = [
     'django.contrib.admin',
@@ -34,7 +43,7 @@ THIRD_PARTY_APPS = [
     'django_filters',
     'allauth',
     'allauth.account',
-    'allauth.socialaccount',
+    # 'allauth.socialaccount',
     'crispy_forms',
     'crispy_bootstrap5',
     # 'simple_history',  # pip install django-simple-history (optional)
@@ -56,6 +65,8 @@ LOCAL_APPS = [
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
+
+SITE_ID = 1
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -102,6 +113,7 @@ DATABASES = {
     )
 }
 
+
 # Channel layers (Redis for WebSocket)
 CHANNEL_LAYERS = {
     'default': {
@@ -134,17 +146,18 @@ USE_I18N = True
 USE_TZ = True
 
 # Static & Media
+# FORCE_SCRIPT_NAME = '/ghanahammer'
+
+# Tell the template engine where to route asset requests
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-STATICFILES_DIRS = [BASE_DIR / 'auction_platform' / 'static']
+STATICFILES_DIRS = [BASE_DIR / 'static']
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-SITE_ID = 1
 
 # Crispy Forms
 CRISPY_ALLOWED_TEMPLATE_PACKS = 'bootstrap5'
@@ -154,10 +167,12 @@ CRISPY_TEMPLATE_PACK = 'bootstrap5'
 ACCOUNT_LOGIN_METHODS = {'email'}
 ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_USERNAME_REQUIRED = True
-ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
+# Only administrator accounts may authenticate; public signup is disabled.
+ACCOUNT_EMAIL_VERIFICATION = 'none'
 ACCOUNT_AUTHENTICATION_METHOD = 'email'
 LOGIN_REDIRECT_URL = '/dashboard/'
 LOGOUT_REDIRECT_URL = '/'
+# LOGIN_URL='/accounts/login/'
 ACCOUNT_FORMS = {
     'login': 'apps.gh_accounts.forms.CustomLoginForm',
     'signup': 'apps.gh_accounts.forms.CustomSignupForm',
@@ -201,10 +216,11 @@ CELERY_RESULT_SERIALIZER = 'json'
 EMAIL_BACKEND = config('EMAIL_BACKEND', default='django.core.mail.backends.console.EmailBackend')
 EMAIL_HOST = config('EMAIL_HOST', default='smtp.gmail.com')
 EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
-EMAIL_USE_TLS = True
+EMAIL_USE_TLS = config('EMAIL_USE_TLS', default='True', cast=bool)
+EMAIL_USE_SSL = config('EMAIL_USE_SSL', default='False', cast=bool)
 EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
-DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='GhanaHammer <noreply@ghanahammer.com>')
+DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='MachineAuction <noreply@ghanahammer.com>')
 
 # Paystack
 PAYSTACK_PUBLIC_KEY = config('PAYSTACK_PUBLIC_KEY', default='pk_test_xxxx')
@@ -247,7 +263,7 @@ AXES_FAILURE_LIMIT = 5
 AXES_COOLOFF_TIME = 1  # hours
 
 # CORS
-CORS_ALLOWED_ORIGINS = config('CORS_ALLOWED_ORIGINS', default='http://localhost:8000', cast=Csv())
+CORS_ALLOWED_ORIGINS = config('CORS_ALLOWED_ORIGINS', default='', cast=Csv())
 CORS_ALLOW_CREDENTIALS = True
 
 # Security
@@ -256,8 +272,37 @@ X_FRAME_OPTIONS = 'SAMEORIGIN'
 
 # Cache
 CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.redis.RedisCache',
-        'LOCATION': config('REDIS_URL', default='redis://localhost:6379'),
+    "default": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "LOCATION": "ghanahammer-cache",
     }
+}
+# Error logging
+LOG_DIR = os.path.join(BASE_DIR, "logs")
+os.makedirs(LOG_DIR, exist_ok=True)
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "verbose": {
+            "format": "{levelname} {asctime} {module} {process:d} {thread:d} {message}",
+            "style": "{",
+        },
+    },
+    "handlers": {
+        "django_file": {
+            "level": "ERROR",
+            "class": "logging.FileHandler",
+            "filename": os.path.join(LOG_DIR, "django_errors.log"),
+            "formatter": "verbose",
+        },
+    },
+    "loggers": {
+        "django": {
+            "handlers": ["django_file"],
+            "level": "ERROR",
+            "propagate": False,
+        },
+    },
 }

@@ -9,6 +9,12 @@ from django.contrib import messages
 from django.conf import settings
 
 
+def registration_disabled(request):
+    """Public registration is disabled; administrators create accounts manually."""
+    messages.info(request, 'Registration is disabled. Please contact an administrator.')
+    return redirect('account_login')
+
+
 @login_required
 def profile(request):
     user = request.user
@@ -74,7 +80,7 @@ def setup_2fa(request):
     totp = pyotp.TOTP(secret)
     provisioning_url = totp.provisioning_uri(
         name=user.email,
-        issuer_name='GhanaHammer'
+        issuer_name='MachineAuction'
     )
 
     # Generate QR code

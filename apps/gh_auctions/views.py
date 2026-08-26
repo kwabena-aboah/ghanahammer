@@ -7,7 +7,7 @@ import logging
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseForbidden
 from django.views.decorators.http import require_POST
 from django.db.models import Q, Count, Avg, Sum
 from django.conf import settings
@@ -240,8 +240,11 @@ def auction_detail(request, slug):
         status__in=['active', 'extended'],
     ).exclude(pk=auction.pk).prefetch_related('images')[:4]
 
+    public_questions = auction.questions.filter(is_public=True)
+
     return render(request, 'gh_auctions/detail.html', {
         'auction': auction,
+        'public_questions': public_questions,
         'is_seller': request.user.is_authenticated and request.user == auction.seller,
         'is_watching': is_watching,
         'related_auctions': related_auctions,
@@ -256,7 +259,7 @@ def auction_detail(request, slug):
 
 @login_required
 def auction_create(request):
-    """Create new auction listing"""
+    """Create a new auction listing for the signed-in seller."""
     if request.method == 'POST':
         return _save_auction(request, auction=None)
 
@@ -275,7 +278,7 @@ def auction_create(request):
 
 @login_required
 def auction_edit(request, slug):
-    """Edit existing auction (seller only, draft/scheduled only)"""
+    """Edit the signed-in seller's draft or scheduled auction listing."""
     auction = get_object_or_404(Auction, slug=slug, seller=request.user)
     if auction.status not in ['draft', 'scheduled']:
         messages.error(request, 'Active auctions cannot be edited once bidding has started.')
@@ -317,8 +320,14 @@ def _save_auction(request, auction=None):
         messages.error(request, 'Invalid category selected.')
         return redirect(request.path)
 
+    # datetime-local form values are timezone-naive. Normalize them to the
+    # project's timezone before comparing them with timezone.now().
     start_time = parse_datetime(data['start_time'])
     end_time = parse_datetime(data['end_time'])
+    if start_time and timezone.is_naive(start_time):
+        start_time = timezone.make_aware(start_time, timezone.get_current_timezone())
+    if end_time and timezone.is_naive(end_time):
+        end_time = timezone.make_aware(end_time, timezone.get_current_timezone())
 
     if not start_time or not end_time:
         messages.error(request, 'Invalid date/time format.')
@@ -332,6 +341,9 @@ def _save_auction(request, auction=None):
     reserve_price = Decimal(data['reserve_price']) if data.get('reserve_price') else None
     buy_now_price = Decimal(data['buy_now_price']) if data.get('buy_now_price') else None
     bid_increment = Decimal(data.get('bid_increment', '10'))
+    preview_start = parse_datetime(data['preview_start']) if data.get('preview_start') else None
+    if preview_start and timezone.is_naive(preview_start):
+        preview_start = timezone.make_aware(preview_start, timezone.get_current_timezone())
 
     status = 'draft' if action == 'draft' else ('scheduled' if start_time > timezone.now() else 'active')
 
@@ -344,8 +356,8 @@ def _save_auction(request, auction=None):
                 seller=request.user, status__in=['active', 'scheduled', 'preview']
             ).count()
             if active_count >= max_listings:
-                messages.error(request, f'Your {request.user.plan} plan allows {max_listings} active listings. Please upgrade.')
-                return redirect('dashboard_subscription')
+                messages.error(request, 'The administrator-managed listing limit has been reached.')
+                return redirect('dashboard')
 
     if auction:
         # Update existing
@@ -383,7 +395,7 @@ def _save_auction(request, auction=None):
             bid_increment=bid_increment,
             start_time=start_time,
             end_time=end_time,
-            preview_start=parse_datetime(data['preview_start']) if data.get('preview_start') else None,
+            preview_start=preview_start,
             location=data.get('location', ''),
             region=data.get('region', ''),
             shipping_available=bool(data.get('shipping_available')),
@@ -460,7 +472,7 @@ def ask_question(request, slug):
 
 @login_required
 def bulk_import(request):
-    """CSV/Excel bulk listing upload"""
+    """Upload a CSV or Excel file to create auction listings."""
     if request.method == 'POST':
         file = request.FILES.get('import_file')
         if not file:

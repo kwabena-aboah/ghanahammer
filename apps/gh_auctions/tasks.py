@@ -48,15 +48,18 @@ def close_expired_auctions():
                 winning_bid.status = Bid.STATUS_WON
                 winning_bid.save(update_fields=['status'])
 
-                # Update winner stats
-                winning_bid.bidder.total_wins += 1
-                winning_bid.bidder.save(update_fields=['total_wins'])
-
-                # Notify winner and seller
-                NotificationService.notify_auction_won(winning_bid.bidder, auction, winning_bid.amount)
+                # Update account winner stats and notify only registered winners.
+                if winning_bid.bidder:
+                    winning_bid.bidder.total_wins += 1
+                    winning_bid.bidder.save(update_fields=['total_wins'])
+                    NotificationService.notify_auction_won(winning_bid.bidder, auction, winning_bid.amount)
                 NotificationService.notify_seller_sale(auction.seller, auction, winning_bid.amount)
 
-                logger.info(f'Auction {auction.lot_number} SOLD to {winning_bid.bidder.email} for GHS {winning_bid.amount}')
+                logger.info(
+                    f"Auction {auction.lot_number} SOLD to "
+                    f"{winning_bid.bidder_email or winning_bid.bidder_name} "
+                    f"for GHS {winning_bid.amount}"
+                )
             else:
                 # No winning bid or reserve not met
                 auction.status = Auction.STATUS_UNSOLD
@@ -233,9 +236,13 @@ def process_bulk_import(batch_id):
                 if not end_time:
                     from datetime import timedelta
                     end_time = timezone.now() + timedelta(days=7)
+                elif timezone.is_naive(end_time):
+                    end_time = timezone.make_aware(end_time, timezone.get_current_timezone())
 
                 start_time_str = str(row.get('start_time', '') or '')
                 start_time = parse_datetime(start_time_str) or timezone.now()
+                if timezone.is_naive(start_time):
+                    start_time = timezone.make_aware(start_time, timezone.get_current_timezone())
 
                 Auction.objects.create(
                     seller=batch.seller,

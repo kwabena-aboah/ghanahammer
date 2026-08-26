@@ -18,7 +18,6 @@ const BiddingApp = createApp({
       auctionStatus: window.GH_AUCTION.status,
       endTime: new Date(window.GH_AUCTION.end_time),
       minNextBid: parseFloat(window.GH_AUCTION.min_next_bid),
-      buyNowPrice: window.GH_AUCTION.buy_now_price ? parseFloat(window.GH_AUCTION.buy_now_price) : null,
       reserveMet: window.GH_AUCTION.reserve_met,
       isAuthenticated: window.GH_AUCTION.is_authenticated,
       isSeller: window.GH_AUCTION.is_seller,
@@ -26,12 +25,15 @@ const BiddingApp = createApp({
       // Bidding form
       bidAmount: '',
       autoBidMax: '',
+      bidderName: '',
+      bidderEmail: '',
+      bidderPhone: '',
+      pickupNotes: '',
       showAutoBid: false,
 
       // UI state
       loading: false,
       autoBidLoading: false,
-      buyNowLoading: false,
       message: null,
       messageType: 'info',
       sniperExtended: false,
@@ -51,16 +53,18 @@ const BiddingApp = createApp({
       return ['active', 'extended', 'closing'].includes(this.auctionStatus);
     },
     canBid() {
-      return this.isAuthenticated && !this.isSeller && this.isActive;
+      return !this.isSeller && this.isActive;
+    },
+    bidderDetailsValid() {
+      return this.isAuthenticated || (
+        this.bidderName.trim() && this.bidderEmail.trim() && this.bidderPhone.trim()
+      );
     },
     formattedCurrentPrice() {
       return this.formatGHS(this.currentPrice);
     },
     formattedMinBid() {
       return this.formatGHS(this.minNextBid);
-    },
-    formattedBuyNow() {
-      return this.buyNowPrice ? this.formatGHS(this.buyNowPrice) : null;
     },
     bidAmountValid() {
       const amt = parseFloat(this.bidAmount);
@@ -196,7 +200,6 @@ const BiddingApp = createApp({
       this.endTime = new Date(data.end_time);
       this.minNextBid = parseFloat(data.min_next_bid);
       this.reserveMet = data.reserve_met;
-      if (data.buy_now_price) this.buyNowPrice = parseFloat(data.buy_now_price);
     },
 
     onBidPlaced(data) {
@@ -236,7 +239,7 @@ const BiddingApp = createApp({
 
     // ── Bid Actions ────────────────────────────────────────────────
     placeBid() {
-      if (!this.canBid || !this.bidAmountValid || this.loading) return;
+      if (!this.canBid || !this.bidAmountValid || !this.bidderDetailsValid || this.loading) return;
 
       this.loading = true;
       this.message = null;
@@ -244,6 +247,10 @@ const BiddingApp = createApp({
       const sent = this.sendWS({
         type: 'place_bid',
         amount: parseFloat(this.bidAmount),
+        bidder_name: this.bidderName,
+        bidder_email: this.bidderEmail,
+        bidder_phone: this.bidderPhone,
+        pickup_notes: this.pickupNotes,
       });
 
       if (!sent) {
@@ -253,12 +260,21 @@ const BiddingApp = createApp({
     },
 
     async placeBidHTTP(amount) {
-      const csrfToken = document.cookie.match(/csrftoken=([^;]+)/)?.[1] || '';
+      const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value
+        || document.cookie.match(/csrftoken=([^;]+)/)?.[1]
+        || '';
       try {
         const resp = await fetch(`/api/v1/bidding/place/`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
-          body: JSON.stringify({ auction_id: this.auctionId, amount }),
+          body: JSON.stringify({
+            auction_id: this.auctionId,
+            amount,
+            bidder_name: this.bidderName,
+            bidder_email: this.bidderEmail,
+            bidder_phone: this.bidderPhone,
+            pickup_notes: this.pickupNotes,
+          }),
         });
         const data = await resp.json();
         if (data.success) {
@@ -280,38 +296,6 @@ const BiddingApp = createApp({
         type: 'set_auto_bid',
         max_amount: parseFloat(this.autoBidMax),
       });
-    },
-
-    async buyNow() {
-      if (!this.canBid || !this.buyNowPrice || this.buyNowLoading) return;
-      if (!confirm(`Buy now for ${this.formattedBuyNow}? This will end the auction immediately.`)) return;
-
-      this.buyNowLoading = true;
-      this.sendWS({ type: 'buy_now' });
-
-      // Fallback to REST
-      setTimeout(async () => {
-        if (this.buyNowLoading) {
-          const csrfToken = document.cookie.match(/csrftoken=([^;]+)/)?.[1] || '';
-          try {
-            const resp = await fetch(`/api/v1/bidding/buy-now/`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
-              body: JSON.stringify({ auction_id: this.auctionId }),
-            });
-            const data = await resp.json();
-            if (data.success) {
-              window.location.href = `/payments/checkout/${this.auctionId}/`;
-            } else {
-              this.showMessage(data.message, 'danger');
-            }
-          } catch (e) {
-            this.showMessage('Error processing Buy Now.', 'danger');
-          } finally {
-            this.buyNowLoading = false;
-          }
-        }
-      }, 3000);
     },
 
     // Quick-bid buttons
@@ -406,11 +390,9 @@ const BiddingApp = createApp({
         {{ message }}
       </div>
 
-      <!-- Not authenticated -->
-      <div v-if="!isAuthenticated" class="text-center py-2">
-        <p class="text-muted small mb-3">Sign in to place a bid</p>
-        <a href="/accounts/login/" class="btn gh-btn-sell w-100">Sign In to Bid</a>
-        <a href="/accounts/signup/" class="btn btn-outline-secondary w-100 mt-2">Create Account</a>
+      <!-- Anonymous visitors can bid on active auctions after providing contact details. -->
+      <div v-if="!isAuthenticated && !isActive" class="text-center py-2">
+        <p class="text-muted small mb-3">This auction is not currently accepting bids.</p>
       </div>
 
       <!-- Seller cannot bid -->
@@ -420,6 +402,15 @@ const BiddingApp = createApp({
 
       <!-- Active bidding UI -->
       <div v-else-if="isActive">
+        <div v-if="!isAuthenticated" class="border rounded p-3 mb-3 bg-light">
+          <div class="fw-semibold small mb-2">Bidder details for inspection & pickup</div>
+          <div class="text-muted" style="font-size:11px">Only the highest bidder's details are used after the auction closes.</div>
+          <input class="form-control form-control-sm mt-2" v-model="bidderName" placeholder="Full name" autocomplete="name">
+          <input class="form-control form-control-sm mt-2" v-model="bidderEmail" type="email" placeholder="Email address" autocomplete="email">
+          <input class="form-control form-control-sm mt-2" v-model="bidderPhone" type="tel" placeholder="Phone number" autocomplete="tel">
+          <textarea class="form-control form-control-sm mt-2" v-model="pickupNotes" rows="2" placeholder="Preferred inspection/pickup time or notes (optional)"></textarea>
+        </div>
+
         <!-- Bid Input -->
         <div class="mb-2">
           <label class="form-label small text-muted">Your Bid (min {{ formattedMinBid }})</label>
@@ -452,15 +443,8 @@ const BiddingApp = createApp({
           </button>
         </div>
 
-        <!-- Buy Now -->
-        <button v-if="buyNowPrice" class="btn gh-btn-buy-now mb-3" @click="buyNow" :disabled="buyNowLoading">
-          <span v-if="buyNowLoading" class="spinner-border spinner-border-sm me-1"></span>
-          <i v-else class="bi bi-bag-check me-1"></i>
-          Buy Now — {{ formattedBuyNow }}
-        </button>
-
-        <!-- Auto-Bid Toggle -->
-        <div class="mb-2">
+        <!-- Auto-Bid remains available only to signed-in bidders. -->
+        <div v-if="isAuthenticated" class="mb-2">
           <button class="btn gh-btn-auto-bid w-100" @click="showAutoBid = !showAutoBid">
             <i class="bi bi-robot me-1"></i>
             {{ showAutoBid ? 'Cancel Auto-Bid' : 'Set Auto-Bid (Proxy)' }}

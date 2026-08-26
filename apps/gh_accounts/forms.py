@@ -1,4 +1,6 @@
+from django.core.exceptions import ValidationError
 from allauth.account.forms import LoginForm, SignupForm, ResetPasswordForm
+
 
 class CustomLoginForm(LoginForm):
     def __init__(self, *args, **kwargs):
@@ -13,6 +15,14 @@ class CustomLoginForm(LoginForm):
             'class': 'auth-input',
             'placeholder': 'Password'
         })
+
+    def clean(self):
+        cleaned_data = super().clean()
+        user = getattr(self, 'user', None)
+        if user and not user.is_staff:
+            raise ValidationError('Only administrators can sign in to this system.')
+        return cleaned_data
+
 
 class CustomSignupForm(SignupForm):
     def __init__(self, *args, **kwargs):

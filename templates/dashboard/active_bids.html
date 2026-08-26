@@ -1,0 +1,58 @@
+{% extends "base/base.html" %}
+{% load humanize %}
+
+{% block title %}Active Bids | MachineAuction{% endblock %}
+
+{% block content %}
+<div class="container-xl py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h4 class="fw-bold mb-1"><i class="bi bi-hammer me-2 text-gold"></i>Active Bids</h4>
+      <p class="text-muted mb-0">Current winning bids and bidder contact details for inspection and pickup.</p>
+    </div>
+    <span class="badge bg-primary fs-6">{{ total_count }} active</span>
+  </div>
+
+  <div class="alert alert-warning small">
+    <i class="bi bi-shield-lock me-1"></i>
+    This page contains private bidder information and is visible to staff only.
+  </div>
+
+  <div class="gh-card table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead>
+        <tr>
+          <th>Auction</th>
+          <th>Bidder</th>
+          <th>Amount</th>
+          <th>Ends</th>
+          <th>Inspection / Pickup</th>
+          <th>Bid placed</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for bid in bids %}
+        <tr>
+          <td>
+            <a href="{{ bid.auction.get_absolute_url }}" class="fw-semibold">{{ bid.auction.title|truncatechars:42 }}</a>
+            <div class="text-muted small">Lot {{ bid.auction.lot_number }} · {{ bid.auction.get_status_display }}</div>
+          </td>
+          <td>
+            <div class="fw-semibold">{% if bid.bidder %}{{ bid.bidder.get_full_name|default:bid.bidder.username }}{% else %}{{ bid.bidder_name }}{% endif %}</div>
+            <span class="badge {% if bid.bidder %}bg-success{% else %}bg-secondary{% endif %}">{% if bid.bidder %}Registered{% else %}Anonymous{% endif %}</span>
+            <div class="small mt-1">{{ bid.bidder_email }}</div>
+            <div class="small">{{ bid.bidder_phone }}</div>
+          </td>
+          <td class="fw-bold text-nowrap">GHS {{ bid.amount|intcomma }}</td>
+          <td class="text-nowrap">{{ bid.auction.end_time|date:"M d, Y H:i" }}</td>
+          <td class="small">{{ bid.pickup_notes|default:"—"|linebreaksbr }}</td>
+          <td class="text-nowrap small">{{ bid.placed_at|date:"M d, Y H:i" }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6" class="text-center text-muted py-5">No active winning bids.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

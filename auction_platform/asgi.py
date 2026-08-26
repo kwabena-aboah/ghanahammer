@@ -1,6 +1,11 @@
-"""ASGI config for GhanaHammer — WebSocket + HTTP"""
+"""ASGI entry point for local development and hosted deployments."""
 import os
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'auction_platform.settings.production')
+
+# Local processes default to development; hosted services set production in env.
+os.environ.setdefault(
+    'DJANGO_SETTINGS_MODULE',
+    'auction_platform.settings.development',
+)
 
 # MUST call get_asgi_application() before importing any Django models/views
 from django.core.asgi import get_asgi_application

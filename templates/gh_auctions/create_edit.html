@@ -38,7 +38,7 @@
           <div class="mb-3">
             <label class="form-label fw-semibold">Title <span class="text-danger">*</span></label>
             <input type="text" name="title" class="form-control" id="field-title"
-                   value="{{ form.title.value|default:'' }}" placeholder="e.g. 2019 Toyota Corolla — Accra" required>
+                   value="{{ form.title|default:'' }}" placeholder="e.g. 2019 Toyota Corolla — Accra" required>
             <div class="form-text">Be specific and descriptive for better search visibility</div>
           </div>
 
@@ -48,7 +48,7 @@
               <select name="category" class="form-select" id="field-category" required>
                 <option value="">Select category…</option>
                 {% for cat in categories %}
-                <option value="{{ cat.id }}" {% if form.category.value == cat.id|stringformat:'s' %}selected{% endif %}>
+                <option value="{{ cat.id }}" {% if form.category.id == cat.id %}selected{% endif %}>
                   {{ cat.name }}
                 </option>
                 {% endfor %}
@@ -57,10 +57,10 @@
             <div class="col-md-6">
               <label class="form-label fw-semibold">Condition</label>
               <select name="condition" class="form-select" id="field-condition">
-                <option value="new" {% if form.condition.value == 'new' %}selected{% endif %}>New</option>
-                <option value="used" {% if form.condition.value == 'used' %}selected{% endif %}>Used</option>
-                <option value="refurbished" {% if form.condition.value == 'refurbished' %}selected{% endif %}>Refurbished</option>
-                <option value="for_parts" {% if form.condition.value == 'for_parts' %}selected{% endif %}>For Parts / Not Working</option>
+                <option value="new" {% if form.condition == 'new' %}selected{% endif %}>New</option>
+                <option value="used" {% if form.condition == 'used' %}selected{% endif %}>Used</option>
+                <option value="refurbished" {% if form.condition == 'refurbished' %}selected{% endif %}>Refurbished</option>
+                <option value="for_parts" {% if form.condition == 'for_parts' %}selected{% endif %}>For Parts / Not Working</option>
               </select>
             </div>
           </div>
@@ -73,7 +73,7 @@
               </button>
             </div>
             <textarea name="description" class="form-control" id="field-description" rows="6"
-                      placeholder="Describe the item in detail…" required>{{ form.description.value|default:'' }}</textarea>
+                      placeholder="Describe the item in detail…" required>{{ form.description|default:'' }}</textarea>
           </div>
         </div>
 
@@ -111,7 +111,7 @@
               <div class="input-group">
                 <span class="input-group-text">GHS</span>
                 <input type="number" name="starting_price" class="form-control" id="field-starting-price"
-                       value="{{ form.starting_price.value|default:'' }}" min="1" step="0.01" required>
+                       value="{{ form.starting_price|default:'' }}" min="1" step="0.01" required>
               </div>
             </div>
             <div class="col-md-4">
@@ -119,7 +119,7 @@
               <div class="input-group">
                 <span class="input-group-text">GHS</span>
                 <input type="number" name="reserve_price" class="form-control" id="field-reserve-price"
-                       value="{{ form.reserve_price.value|default:'' }}" min="0" step="0.01">
+                       value="{{ form.reserve_price|default:'' }}" min="0" step="0.01">
               </div>
               <div class="form-text">Minimum acceptable price. Hidden from buyers.</div>
             </div>
@@ -128,7 +128,7 @@
               <div class="input-group">
                 <span class="input-group-text">GHS</span>
                 <input type="number" name="buy_now_price" class="form-control" id="field-buy-now-price"
-                       value="{{ form.buy_now_price.value|default:'' }}" min="0" step="0.01">
+                       value="{{ form.buy_now_price|default:'' }}" min="0" step="0.01">
               </div>
               <div class="form-text">Optional. Buyers can purchase immediately at this price.</div>
             </div>
@@ -138,11 +138,11 @@
             <div class="col-md-6">
               <label class="form-label fw-semibold">Auction Type</label>
               <select name="auction_type" class="form-select">
-                <option value="standard">Standard Auction</option>
-                <option value="reserve">Reserve Price Auction</option>
-                <option value="buy_now">Auction + Buy Now</option>
-                <option value="live">Live Video Auction</option>
-                <option value="sealed">Sealed Bid</option>
+                <option value="standard" {% if form.auction_type == 'standard' %}selected{% endif %}>Standard Auction</option>
+                <option value="reserve" {% if form.auction_type == 'reserve' %}selected{% endif %}>Reserve Price Auction</option>
+                <option value="buy_now" {% if form.auction_type == 'buy_now' %}selected{% endif %}>Auction + Buy Now</option>
+                <option value="live" {% if form.auction_type == 'live' %}selected{% endif %}>Live Video Auction</option>
+                <option value="sealed" {% if form.auction_type == 'sealed' %}selected{% endif %}>Sealed Bid</option>
               </select>
             </div>
             <div class="col-md-6">
@@ -150,7 +150,7 @@
               <div class="input-group">
                 <span class="input-group-text">GHS</span>
                 <input type="number" name="bid_increment" class="form-control"
-                       value="{{ form.bid_increment.value|default:'10' }}" min="1" step="1">
+                       value="{{ form.bid_increment|default:'10' }}" min="1" step="1">
               </div>
             </div>
           </div>
@@ -163,18 +163,18 @@
             <div class="col-md-4">
               <label class="form-label fw-semibold">VIP Preview Start</label>
               <input type="datetime-local" name="preview_start" class="form-control"
-                     value="{{ form.preview_start.value|default:'' }}">
+                     value="{{ form.preview_start|date:'Y-m-d\TH:i' }}">
               <div class="form-text">Gold & Platinum members see listing early</div>
             </div>
             <div class="col-md-4">
               <label class="form-label fw-semibold">Auction Start <span class="text-danger">*</span></label>
               <input type="datetime-local" name="start_time" class="form-control" required
-                     value="{{ form.start_time.value|default:'' }}">
+                     value="{{ form.start_time|date:'Y-m-d\TH:i' }}">
             </div>
             <div class="col-md-4">
               <label class="form-label fw-semibold">Auction End <span class="text-danger">*</span></label>
               <input type="datetime-local" name="end_time" class="form-control" required
-                     value="{{ form.end_time.value|default:'' }}">
+                     value="{{ form.end_time|date:'Y-m-d\TH:i' }}">
             </div>
           </div>
 
@@ -214,14 +214,14 @@
             <div class="col-md-6">
               <label class="form-label fw-semibold">Item Location</label>
               <input type="text" name="location" class="form-control" id="field-location"
-                     value="{{ form.location.value|default:'' }}" placeholder="e.g. Accra, Kumasi…">
+                     value="{{ form.location|default:'' }}" placeholder="e.g. Accra, Kumasi…">
             </div>
             <div class="col-md-6">
               <label class="form-label fw-semibold">Region</label>
               <select name="region" class="form-select">
                 <option value="">Select Region</option>
                 {% for region in regions %}
-                <option value="{{ region }}">{{ region }}</option>
+                <option value="{{ region }}" {% if form.region == region %}selected{% endif %}>{{ region }}</option>
                 {% endfor %}
               </select>
             </div>
@@ -230,19 +230,19 @@
             <div class="col-md-4">
               <div class="form-check mt-2">
                 <input class="form-check-input" type="checkbox" name="shipping_available" id="shipping-available"
-                       {% if form.shipping_available.value %}checked{% endif %}>
+                       {% if form.shipping_available %}checked{% endif %}>
                 <label class="form-check-label" for="shipping-available">Shipping Available</label>
               </div>
             </div>
             <div class="col-md-4" id="shipping-cost-field">
               <label class="form-label fw-semibold small">Shipping Cost (GHS)</label>
               <input type="number" name="shipping_cost" class="form-control form-control-sm"
-                     value="{{ form.shipping_cost.value|default:'' }}" step="0.01">
+                     value="{{ form.shipping_cost|default:'' }}" step="0.01">
             </div>
             <div class="col-md-4">
               <div class="form-check mt-2">
                 <input class="form-check-input" type="checkbox" name="pickup_only" id="pickup-only"
-                       {% if form.pickup_only.value %}checked{% endif %}>
+                       {% if form.pickup_only %}checked{% endif %}>
                 <label class="form-check-label" for="pickup-only">Pickup Only</label>
               </div>
             </div>

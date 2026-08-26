@@ -40,19 +40,17 @@ class AuctionBiddingConsumer(AsyncWebsocketConsumer):
         data = json.loads(text_data)
         msg_type = data.get('type')
 
-        if not self.user.is_authenticated:
-            await self.send(text_data=json.dumps({
-                'type': 'error',
-                'message': 'Authentication required to bid.',
-            }))
-            return
-
         if msg_type == 'place_bid':
             await self.handle_place_bid(data)
         elif msg_type == 'set_auto_bid':
+            if not self.user.is_authenticated:
+                await self.send(text_data=json.dumps({
+                    'type': 'auto_bid_set',
+                    'success': False,
+                    'message': 'Sign in to use auto-bidding.',
+                }))
+                return
             await self.handle_set_auto_bid(data)
-        elif msg_type == 'buy_now':
-            await self.handle_buy_now(data)
         elif msg_type == 'heartbeat':
             await self.send(text_data=json.dumps({'type': 'pong'}))
 
@@ -63,7 +61,13 @@ class AuctionBiddingConsumer(AsyncWebsocketConsumer):
             await self.send(text_data=json.dumps({'type': 'error', 'message': 'Bid amount required.'}))
             return
 
-        result = await self.place_bid(float(amount))
+        result = await self.place_bid(
+            float(amount),
+            bidder_name=data.get('bidder_name', ''),
+            bidder_email=data.get('bidder_email', ''),
+            bidder_phone=data.get('bidder_phone', ''),
+            pickup_notes=data.get('pickup_notes', ''),
+        )
         if result['success']:
             # Broadcast to all in room
             await self.channel_layer.group_send(
@@ -190,4 +194,12 @@ class AuctionBiddingConsumer(AsyncWebsocketConsumer):
         return service.process_buy_now(
             auction_id=self.auction_id,
             buyer=self.user,
+        )
+   from apps.bidding.services import BiddingService
+        service = BiddingService()
+        return service.process_buy_now(
+            auction_id=self.auction_id,
+            buyer=self.user,
+        )
+elf.user,
         )

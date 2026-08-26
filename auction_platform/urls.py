@@ -8,13 +8,14 @@ from django.views.generic import TemplateView
 urlpatterns = [
     path('admin/', admin.site.urls),
     
-    # Auth
+    # Auth: public registration is disabled; allauth handles administrator login.
+    path('accounts/signup/', include('apps.gh_accounts.signup_disabled_urls')),
     path('accounts/', include('allauth.urls')),
     path('auth/', include('apps.gh_accounts.urls')),
     
     # Core Platform
     path('', include('apps.gh_auctions.urls')),
-    path('payments/', include('apps.payments.urls')),
+    # Payments are intentionally offline and have no public application routes.
     path('messaging/', include('apps.messaging.urls')),
     path('analytics/', include('apps.analytics.urls')),
     path('kyc/', include('apps.kyc.urls')),

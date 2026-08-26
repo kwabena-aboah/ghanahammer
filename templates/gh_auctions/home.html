@@ -122,7 +122,7 @@
     <div class="row g-3">
       {% for auction in live_auctions %}
       <div class="col-6 col-md-4 col-lg-3">
-        {% include "auctions/partials/auction_card.html" %}
+        {% include "gh_auctions/partials/auction_card.html" %}
       </div>
       {% endfor %}
     </div>
@@ -139,7 +139,7 @@
     <div class="row g-3">
       {% for auction in featured_auctions %}
       <div class="col-6 col-md-4 col-lg-3">
-        {% include "auctions/partials/auction_card.html" %}
+        {% include "gh_auctions/partials/auction_card.html" %}
       </div>
       {% endfor %}
     </div>
@@ -175,7 +175,7 @@
     <div class="row g-3">
       {% for auction in ending_soon %}
       <div class="col-6 col-md-4 col-lg-3">
-        {% include "auctions/partials/auction_card.html" %}
+        {% include "gh_auctions/partials/auction_card.html" %}
       </div>
       {% endfor %}
     </div>
@@ -192,7 +192,7 @@
     <div class="row g-3">
       {% for auction in new_arrivals %}
       <div class="col-6 col-md-4 col-lg-3">
-        {% include "auctions/partials/auction_card.html" %}
+        {% include "gh_auctions/partials/auction_card.html" %}
       </div>
       {% endfor %}
     </div>
@@ -225,56 +225,6 @@
       </div>
     </div>
   </section>
-
-  <!-- ═══ SUBSCRIPTION PLANS PREVIEW ══════════════════════════════════ -->
-  {% if not user.is_authenticated or user.plan == 'free' %}
-  <section class="mb-5">
-    <div class="text-center mb-4">
-      <h2 class="gh-section-heading d-inline-flex">Upgrade Your Experience</h2>
-      <p class="text-muted mt-2">Unlock early access, advanced analytics, and unlimited listings</p>
-    </div>
-    <div class="row g-4 justify-content-center">
-      {% for plan_key, plan_data in plans.items %}
-      <div class="col-md-3">
-        <div class="gh-plan-card {% if plan_key == 'gold' %}recommended{% endif %}">
-          {% if plan_key == 'gold' %}<div class="badge bg-gold text-dark mb-2">Most Popular</div>{% endif %}
-          <div class="fw-bold mb-1 text-capitalize">{{ plan_key }}</div>
-          <div class="gh-plan-price">
-            <span class="currency">GHS</span>{{ plan_data.price }}
-          </div>
-          <div class="gh-plan-period text-muted mb-3">/month</div>
-          <div class="text-start">
-            <div class="gh-plan-feature">
-              <i class="bi bi-check-circle-fill"></i>
-              {{ plan_data.max_listings }} listings{% if plan_data.max_listings == -1 %} (Unlimited){% endif %}
-            </div>
-            {% if 'analytics_basic' in plan_data.features or 'analytics_full' in plan_data.features or 'all' in plan_data.features %}
-            <div class="gh-plan-feature"><i class="bi bi-check-circle-fill"></i> Seller Analytics</div>
-            {% else %}
-            <div class="gh-plan-feature text-muted"><i class="bi bi-x-circle"></i> Seller Analytics</div>
-            {% endif %}
-            {% if 'early_access' in plan_data.features or 'all' in plan_data.features %}
-            <div class="gh-plan-feature"><i class="bi bi-check-circle-fill"></i> VIP Early Access</div>
-            {% else %}
-            <div class="gh-plan-feature text-muted"><i class="bi bi-x-circle"></i> VIP Early Access</div>
-            {% endif %}
-            {% if 'alerts' in plan_data.features or 'all' in plan_data.features %}
-            <div class="gh-plan-feature"><i class="bi bi-check-circle-fill"></i> Smart Alerts</div>
-            {% endif %}
-          </div>
-          {% if plan_data.price == 0 %}
-          <a href="{% url 'account_signup' %}" class="btn btn-outline-secondary w-100 mt-3">Get Started Free</a>
-          {% else %}
-          <a href="{% url 'dashboard_subscription' %}" class="btn {% if plan_key == 'gold' %}gh-btn-sell{% else %}btn-outline-secondary{% endif %} w-100 mt-3">
-            Upgrade to {{ plan_key|title }}
-          </a>
-          {% endif %}
-        </div>
-      </div>
-      {% endfor %}
-    </div>
-  </section>
-  {% endif %}
 
 </div>
 {% endblock %}
