@@ -1,0 +1,497 @@
+/* ═══════════════════════════════════════════════════════════════
+   GhanaHammer Auction Platform — Main Stylesheet
+   Ghana's Premier Online Auction Marketplace
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ─── Design Tokens ─────────────────────────────────────────── */
+:root {
+  --gh-gold: #F0A500;
+  --gh-gold-dark: #C88800;
+  --gh-gold-light: #FFD166;
+  --gh-navy: #0D1B2A;
+  --gh-navy-mid: #1A2D42;
+  --gh-navy-light: #243B55;
+  --gh-green: #06A050;
+  --gh-red: #D32F2F;
+  --gh-bg: #F5F7FA;
+  --gh-card: #FFFFFF;
+  --gh-border: #E2E8F0;
+  --gh-text: #1E293B;
+  --gh-text-muted: #64748B;
+  --gh-radius: 12px;
+  --gh-radius-sm: 8px;
+  --gh-shadow: 0 2px 12px rgba(0,0,0,.08);
+  --gh-shadow-lg: 0 8px 32px rgba(0,0,0,.12);
+  --font-main: 'Inter', system-ui, sans-serif;
+  --font-display: 'Bebas Neue', 'Inter', sans-serif;
+}
+
+/* ─── Global ─────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  font-family: var(--font-main);
+  background: var(--gh-bg);
+  color: var(--gh-text);
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+a { color: var(--gh-gold); text-decoration: none; }
+a:hover { color: var(--gh-gold-dark); }
+
+/* ─── Navbar ─────────────────────────────────────────────────── */
+.gh-navbar {
+  background: var(--gh-navy);
+  padding: 0.65rem 0;
+  box-shadow: 0 2px 16px rgba(0,0,0,.25);
+  z-index: 1040;
+}
+
+.gh-brand { display: flex; align-items: center; gap: 8px; }
+.gh-hammer { font-size: 1.6rem; }
+.gh-name { font-family: var(--font-display); font-size: 1.65rem; letter-spacing: 1px; color: #fff; }
+.gh-accent { color: var(--gh-gold); }
+
+.gh-search-form { flex: 1; max-width: 520px; }
+.gh-search-input {
+  border: 2px solid var(--gh-navy-light);
+  background: var(--gh-navy-light);
+  color: #fff;
+  border-right: 0;
+}
+.gh-search-input::placeholder { color: #8899aa; }
+.gh-search-input:focus { background: var(--gh-navy-light); border-color: var(--gh-gold); box-shadow: none; color: #fff; }
+.gh-search-cat {
+  background: var(--gh-navy-light);
+  border: 2px solid var(--gh-navy-light);
+  color: #ccc;
+  max-width: 140px;
+  border-left: 1px solid #2a3f58;
+  border-right: 0;
+}
+.gh-search-cat:focus { box-shadow: none; border-color: var(--gh-gold); }
+.gh-btn-search { background: var(--gh-gold); border: none; color: var(--gh-navy); font-weight: 700; padding: 0 18px; }
+.gh-btn-search:hover { background: var(--gh-gold-dark); }
+
+.gh-btn-sell {
+  background: var(--gh-gold);
+  color: var(--gh-navy);
+  font-weight: 700;
+  border-radius: var(--gh-radius-sm);
+  padding: 8px 18px;
+  border: none;
+  white-space: nowrap;
+}
+.gh-btn-sell:hover { background: var(--gh-gold-dark); color: var(--gh-navy); }
+
+.gh-nav-avatar { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 2px solid var(--gh-gold); }
+.gh-nav-avatar-placeholder {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: var(--gh-gold); color: var(--gh-navy);
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 800; font-size: 13px;
+}
+
+.gh-plan-badge { font-size: 9px; padding: 2px 5px; border-radius: 4px; }
+.gh-plan-silver { background: #94A3B8; color: #fff; }
+.gh-plan-gold { background: var(--gh-gold); color: var(--gh-navy); }
+.gh-plan-platinum { background: linear-gradient(135deg, #8B5CF6, #6366F1); color: #fff; }
+
+.gh-user-menu {
+  background: var(--gh-navy-mid);
+  border: 1px solid var(--gh-navy-light);
+  border-radius: var(--gh-radius-sm);
+  min-width: 220px;
+}
+.gh-user-menu .dropdown-item {
+  color: #cbd5e1;
+  padding: 9px 16px;
+  font-size: 14px;
+  transition: background .15s;
+}
+.gh-user-menu .dropdown-item:hover { background: var(--gh-navy-light); color: var(--gh-gold); }
+.gh-user-menu .dropdown-divider { border-color: var(--gh-navy-light); margin: 4px 0; }
+
+/* ─── Category Bar ───────────────────────────────────────────── */
+.gh-cat-bar {
+  background: var(--gh-navy-mid);
+  border-bottom: 1px solid var(--gh-navy-light);
+  padding: 0;
+}
+.gh-cat-bar .container-xl { overflow-x: auto; scrollbar-width: none; }
+.gh-cat-pill {
+  display: inline-flex; align-items: center;
+  padding: 8px 14px;
+  color: #94A3B8;
+  font-size: 13px; font-weight: 500;
+  white-space: nowrap;
+  border-bottom: 2px solid transparent;
+  transition: color .15s, border-color .15s;
+}
+.gh-cat-pill:hover, .gh-cat-pill.active { color: var(--gh-gold); border-bottom-color: var(--gh-gold); }
+
+/* ─── Cards ──────────────────────────────────────────────────── */
+.gh-card {
+  background: var(--gh-card);
+  border-radius: var(--gh-radius);
+  border: 1px solid var(--gh-border);
+  box-shadow: var(--gh-shadow);
+  overflow: hidden;
+  transition: transform .2s, box-shadow .2s;
+}
+.gh-card:hover { transform: translateY(-3px); box-shadow: var(--gh-shadow-lg); }
+
+/* ─── Auction Card ───────────────────────────────────────────── */
+.gh-auction-card { position: relative; }
+.gh-auction-img {
+  width: 100%; aspect-ratio: 4/3;
+  object-fit: cover;
+  background: #e2e8f0;
+}
+.gh-auction-img-placeholder {
+  width: 100%; aspect-ratio: 4/3;
+  background: linear-gradient(135deg, #1A2D42, #243B55);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 3rem; color: #4a6580;
+}
+.gh-badge-featured {
+  position: absolute; top: 10px; left: 10px;
+  background: var(--gh-gold); color: var(--gh-navy);
+  font-size: 11px; font-weight: 700;
+  padding: 3px 8px; border-radius: 4px;
+}
+.gh-badge-live {
+  position: absolute; top: 10px; left: 10px;
+  background: var(--gh-red); color: #fff;
+  font-size: 11px; font-weight: 700;
+  padding: 3px 8px; border-radius: 4px;
+  animation: pulse 1.5s infinite;
+}
+.gh-badge-reserve-met {
+  position: absolute; top: 10px; right: 10px;
+  background: var(--gh-green); color: #fff;
+  font-size: 10px; font-weight: 600;
+  padding: 3px 7px; border-radius: 4px;
+}
+.gh-watch-btn {
+  position: absolute; top: 10px; right: 10px;
+  background: rgba(0,0,0,.5); border: none;
+  color: #fff; border-radius: 50%;
+  width: 34px; height: 34px;
+  display: flex; align-items: center; justify-content: center;
+  transition: background .15s, color .15s;
+}
+.gh-watch-btn:hover, .gh-watch-btn.watching { background: var(--gh-red); }
+.gh-auction-body { padding: 14px 16px 16px; }
+.gh-auction-lot { font-size: 11px; color: var(--gh-text-muted); font-weight: 600; letter-spacing: .5px; text-transform: uppercase; }
+.gh-auction-title { font-size: 15px; font-weight: 600; color: var(--gh-text); line-height: 1.35; margin: 4px 0 10px; }
+.gh-auction-title:hover { color: var(--gh-gold); }
+.gh-current-price { font-size: 1.25rem; font-weight: 800; color: var(--gh-navy); }
+.gh-price-label { font-size: 11px; color: var(--gh-text-muted); font-weight: 500; }
+.gh-auction-meta { font-size: 12px; color: var(--gh-text-muted); }
+.gh-countdown { font-weight: 700; color: var(--gh-red); font-variant-numeric: tabular-nums; }
+.gh-countdown.ending { animation: pulse 1s infinite; }
+
+/* ─── Countdown Timer ────────────────────────────────────────── */
+.gh-timer-block { display: flex; gap: 8px; }
+.gh-timer-unit {
+  background: var(--gh-navy);
+  color: #fff;
+  border-radius: var(--gh-radius-sm);
+  padding: 6px 10px;
+  text-align: center;
+  min-width: 50px;
+}
+.gh-timer-value { font-size: 1.4rem; font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1; }
+.gh-timer-label { font-size: 9px; text-transform: uppercase; color: #94a3b8; letter-spacing: 1px; }
+
+/* ─── Bidding Interface ──────────────────────────────────────── */
+.gh-bid-panel {
+  background: var(--gh-card);
+  border: 2px solid var(--gh-border);
+  border-radius: var(--gh-radius);
+  padding: 24px;
+  position: sticky; top: 90px;
+}
+.gh-bid-panel.active-auction { border-color: var(--gh-gold); }
+.gh-current-bid-display { font-size: 2rem; font-weight: 900; color: var(--gh-navy); }
+.gh-bid-input-group .form-control {
+  font-size: 1.2rem;
+  font-weight: 700;
+  border: 2px solid var(--gh-border);
+  border-radius: var(--gh-radius-sm) 0 0 var(--gh-radius-sm);
+  padding: 12px 16px;
+}
+.gh-bid-input-group .form-control:focus { border-color: var(--gh-gold); box-shadow: 0 0 0 3px rgba(240,165,0,.15); }
+.gh-btn-bid {
+  background: var(--gh-gold);
+  color: var(--gh-navy);
+  font-weight: 800;
+  font-size: 1rem;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 0 var(--gh-radius-sm) var(--gh-radius-sm) 0;
+  transition: background .15s;
+}
+.gh-btn-bid:hover { background: var(--gh-gold-dark); }
+.gh-btn-bid:disabled { opacity: .6; }
+.gh-btn-auto-bid {
+  background: transparent;
+  border: 2px solid var(--gh-navy);
+  color: var(--gh-navy);
+  font-weight: 700;
+  border-radius: var(--gh-radius-sm);
+  padding: 10px 20px;
+  transition: all .15s;
+}
+.gh-btn-auto-bid:hover { background: var(--gh-navy); color: #fff; }
+.gh-btn-buy-now {
+  background: var(--gh-green);
+  color: #fff;
+  font-weight: 700;
+  border: none;
+  border-radius: var(--gh-radius-sm);
+  padding: 12px;
+  width: 100%;
+  transition: background .15s;
+}
+.gh-btn-buy-now:hover { background: #058040; }
+
+/* Bid history list */
+.gh-bid-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; border-bottom: 1px solid var(--gh-border); }
+.gh-bid-item:first-child { background: rgba(240,165,0,.06); font-weight: 700; }
+.gh-bid-item:last-child { border-bottom: none; }
+.gh-bid-amount { font-weight: 700; color: var(--gh-navy); }
+.gh-bid-winner { font-size: 12px; color: var(--gh-green); font-weight: 600; }
+.gh-bid-auto-label { font-size: 10px; background: #e0e7ff; color: #4f46e5; border-radius: 4px; padding: 1px 5px; }
+
+/* ─── Hero / Homepage ────────────────────────────────────────── */
+.gh-hero {
+  background: linear-gradient(135deg, var(--gh-navy) 0%, var(--gh-navy-light) 60%, #1e3a5f 100%);
+  color: #fff;
+  padding: 60px 0;
+  position: relative;
+  overflow: hidden;
+}
+.gh-hero::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+.gh-hero-title { font-family: var(--font-display); font-size: clamp(2rem, 5vw, 3.5rem); line-height: 1.05; }
+.gh-hero-title .accent { color: var(--gh-gold); }
+.gh-hero-subtitle { font-size: 1.05rem; color: #94a3b8; max-width: 500px; }
+.gh-hero-stats { display: flex; gap: 24px; flex-wrap: wrap; margin-top: 24px; }
+.gh-hero-stat { text-align: center; }
+.gh-hero-stat-value { font-size: 1.5rem; font-weight: 800; color: var(--gh-gold); display: block; }
+.gh-hero-stat-label { font-size: 12px; color: #64748b; }
+.gh-hero-search {
+  background: rgba(255,255,255,.07);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: var(--gh-radius);
+  padding: 20px;
+  margin-top: 28px;
+}
+
+/* ─── Section Headings ───────────────────────────────────────── */
+.gh-section-heading {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--gh-navy);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.gh-section-heading::before {
+  content: '';
+  width: 4px; height: 22px;
+  background: var(--gh-gold);
+  border-radius: 2px;
+}
+
+/* ─── Filter Sidebar ─────────────────────────────────────────── */
+.gh-filter-panel {
+  background: var(--gh-card);
+  border: 1px solid var(--gh-border);
+  border-radius: var(--gh-radius);
+  padding: 20px;
+}
+.gh-filter-title { font-weight: 700; font-size: 13px; text-transform: uppercase; letter-spacing: .8px; color: var(--gh-text-muted); margin-bottom: 12px; }
+
+/* ─── Dashboard ──────────────────────────────────────────────── */
+.gh-dash-sidebar {
+  background: var(--gh-navy);
+  min-height: 100vh;
+  padding: 24px 0;
+}
+.gh-dash-nav-link {
+  display: flex; align-items: center; gap: 12px;
+  padding: 11px 24px;
+  color: #94a3b8;
+  font-size: 14px; font-weight: 500;
+  transition: all .15s;
+  border-left: 3px solid transparent;
+}
+.gh-dash-nav-link:hover, .gh-dash-nav-link.active {
+  color: var(--gh-gold);
+  background: rgba(240,165,0,.08);
+  border-left-color: var(--gh-gold);
+}
+.gh-stat-card {
+  background: var(--gh-card);
+  border: 1px solid var(--gh-border);
+  border-radius: var(--gh-radius);
+  padding: 20px 24px;
+  display: flex; align-items: center; gap: 16px;
+}
+.gh-stat-icon {
+  width: 52px; height: 52px;
+  border-radius: var(--gh-radius-sm);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.4rem;
+}
+.gh-stat-value { font-size: 1.6rem; font-weight: 900; }
+.gh-stat-label { font-size: 13px; color: var(--gh-text-muted); }
+
+/* ─── Subscription Plans ─────────────────────────────────────── */
+.gh-plan-card {
+  border: 2px solid var(--gh-border);
+  border-radius: var(--gh-radius);
+  padding: 28px;
+  text-align: center;
+  transition: border-color .2s, transform .2s;
+  background: var(--gh-card);
+}
+.gh-plan-card.recommended {
+  border-color: var(--gh-gold);
+  transform: scale(1.04);
+  box-shadow: 0 8px 32px rgba(240,165,0,.2);
+}
+.gh-plan-price { font-size: 2.4rem; font-weight: 900; color: var(--gh-navy); }
+.gh-plan-price .currency { font-size: 1rem; vertical-align: top; margin-top: 10px; display: inline-block; }
+.gh-plan-period { font-size: 13px; color: var(--gh-text-muted); }
+.gh-plan-feature { display: flex; align-items: center; gap: 8px; font-size: 14px; margin-bottom: 8px; }
+.gh-plan-feature .bi-check-circle-fill { color: var(--gh-green); }
+.gh-plan-feature .bi-x-circle { color: #cbd5e1; }
+
+/* ─── Notifications ──────────────────────────────────────────── */
+.gh-notif-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 340px;
+  background: var(--gh-card);
+  border: 1px solid var(--gh-border);
+  border-radius: var(--gh-radius);
+  box-shadow: var(--gh-shadow-lg);
+  z-index: 1050;
+}
+.gh-notif-header { padding: 14px 16px; border-bottom: 1px solid var(--gh-border); }
+.gh-notif-list { max-height: 360px; overflow-y: auto; }
+.gh-notif-item {
+  display: flex; gap: 10px; align-items: flex-start;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--gh-border);
+  color: var(--gh-text);
+  transition: background .1s;
+}
+.gh-notif-item:hover { background: var(--gh-bg); }
+.gh-notif-item.unread { background: rgba(240,165,0,.05); }
+.gh-notif-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--gh-gold); margin-top: 5px; flex-shrink: 0; }
+.gh-notif-item:not(.unread) .gh-notif-dot { background: transparent; }
+
+/* ─── Toast Notifications ────────────────────────────────────── */
+.gh-toast-container {
+  position: fixed; bottom: 24px; right: 24px;
+  display: flex; flex-direction: column; gap: 10px;
+  z-index: 9999;
+}
+.gh-toast {
+  background: var(--gh-navy-mid);
+  color: #fff;
+  border-left: 4px solid var(--gh-gold);
+  border-radius: var(--gh-radius-sm);
+  padding: 14px 18px;
+  display: flex; gap: 12px; align-items: flex-start;
+  max-width: 340px;
+  box-shadow: var(--gh-shadow-lg);
+  transform: translateX(120%);
+  transition: transform .3s ease;
+}
+.gh-toast.show { transform: translateX(0); }
+.gh-toast-icon { font-size: 1.2rem; flex-shrink: 0; }
+.gh-toast-title { font-weight: 700; font-size: 13px; }
+.gh-toast-msg { font-size: 12px; color: #94a3b8; margin-top: 2px; }
+
+/* ─── Live Auction Badge ─────────────────────────────────────── */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: .5; }
+}
+.gh-live-dot {
+  display: inline-block;
+  width: 8px; height: 8px;
+  background: var(--gh-red);
+  border-radius: 50%;
+  animation: pulse 1.5s infinite;
+  margin-right: 6px;
+}
+
+/* ─── Payment Badges ─────────────────────────────────────────── */
+.gh-payment-icon {
+  font-size: 12px;
+  background: rgba(255,255,255,.08);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 6px;
+  padding: 4px 10px;
+  color: #94a3b8;
+  white-space: nowrap;
+}
+
+/* ─── Footer ─────────────────────────────────────────────────── */
+.gh-footer {
+  background: linear-gradient(135deg, var(--gh-navy) 0%, var(--gh-navy-light) 60%, #1e3a5f 100%);
+  color: #94a3b8;
+  padding-top: 48px;
+}
+.gh-footer-heading { font-weight: 700; color: #fff; font-size: 13px; text-transform: uppercase; letter-spacing: .8px; margin-bottom: 14px; }
+.gh-footer-link { color: #94a3b8; font-size: 14px; display: block; margin-bottom: 8px; transition: color .15s; }
+.gh-footer-link:hover { color: var(--gh-gold); }
+.gh-footer-divider { border-color: var(--gh-navy); }
+.gh-social-link { color: #64748b; font-size: 1.1rem; transition: color .15s; }
+.gh-social-link:hover { color: var(--gh-gold); }
+
+/* ─── KYC / Status Badges ────────────────────────────────────── */
+.gh-verified-badge { background: var(--gh-green); color: #fff; font-size: 11px; padding: 2px 8px; border-radius: 4px; font-weight: 600; }
+.gh-pending-badge { background: #F59E0B; color: #fff; font-size: 11px; padding: 2px 8px; border-radius: 4px; font-weight: 600; }
+
+/* ─── Escrow Status ──────────────────────────────────────────── */
+.gh-escrow-card {
+  border: 2px solid var(--gh-border);
+  border-radius: var(--gh-radius);
+  padding: 24px;
+}
+.gh-escrow-card.holding { border-color: #F59E0B; }
+.gh-escrow-card.released { border-color: var(--gh-green); }
+.gh-escrow-card.disputed { border-color: var(--gh-red); }
+
+/* ─── Utilities ──────────────────────────────────────────────── */
+.text-gold { color: var(--gh-gold) !important; }
+.bg-gold { background: var(--gh-gold) !important; }
+.bg-navy { background: var(--gh-navy) !important; }
+.border-gold { border-color: var(--gh-gold) !important; }
+.gh-divider { border: none; border-top: 1px solid var(--gh-border); margin: 20px 0; }
+.gh-skeleton { background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 4px; }
+@keyframes shimmer { to { background-position: -200% 0; } }
+
+/* ─── Responsive ─────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .gh-hero { padding: 36px 0; }
+  .gh-bid-panel { position: static; }
+  .gh-dash-sidebar { min-height: auto; }
+  .gh-notif-dropdown { width: 100vw; right: -16px; }
+  .gh-toast-container { bottom: 16px; right: 16px; left: 16px; }
+  .gh-toast { max-width: 100%; }
+}
