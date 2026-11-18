@@ -5,37 +5,37 @@ mobile money integration, escrow payments, AI features, and more.
 
 ## ✨ Feature Highlights
 
-| Feature | Status |
-|---|---|
-| Real-time WebSocket bidding | ✅ |
-| Auto-bidding (Proxy Bidding) | ✅ |
-| Bid Sniper Protection (auto-extend) | ✅ |
-| Escrow Payment System | ✅ |
-| Paystack (Card, MoMo, Bank Transfer) | ✅ |
-| MTN MoMo / Telecel / AirtelTigo | ✅ |
-| KYC Verification | ✅ |
-| Two-Factor Authentication (2FA) | ✅ |
-| WhatsApp Notifications | ✅ |
-| AI Price Recommendations | ✅ |
-| AI Description Generator | ✅ |
-| Demand Forecasting | ✅ |
-| Fraud Detection | ✅ |
-| Seller Analytics Dashboard | ✅ |
-| Subscription Plans (Free/Silver/Gold/Platinum) | ✅ |
-| Bid Credits | ✅ |
-| Bulk CSV/Excel Import | ✅ |
-| Saved Searches & Smart Alerts | ✅ |
-| VIP Early Access | ✅ |
-| Featured & Sponsored Listings | ✅ |
-| Reserve Price Auctions | ✅ |
-| Buy Now + Auction | ✅ |
-| Live Video Auctions | ✅ |
-| In-App Messaging & Negotiation | ✅ |
-| Multi-Vendor Marketplace | ✅ |
-| Advanced Search Filters | ✅ |
-| Auction Scheduling | ✅ |
-| Seller Verification Badge | ✅ |
-| Watchlist | ✅ |
+| Feature                                        | Status |
+| ---------------------------------------------- | ------ |
+| Real-time WebSocket bidding                    | ✅     |
+| Auto-bidding (Proxy Bidding)                   | ✅     |
+| Bid Sniper Protection (auto-extend)            | ✅     |
+| Escrow Payment System                          | ✅     |
+| Paystack (Card, MoMo, Bank Transfer)           | ✅     |
+| MTN MoMo / Telecel / AirtelTigo                | ✅     |
+| KYC Verification                               | ✅     |
+| Two-Factor Authentication (2FA)                | ✅     |
+| WhatsApp Notifications                         | ✅     |
+| AI Price Recommendations                       | ✅     |
+| AI Description Generator                       | ✅     |
+| Demand Forecasting                             | ✅     |
+| Fraud Detection                                | ✅     |
+| Seller Analytics Dashboard                     | ✅     |
+| Subscription Plans (Free/Silver/Gold/Platinum) | ✅     |
+| Bid Credits                                    | ✅     |
+| Bulk CSV/Excel Import                          | ✅     |
+| Saved Searches & Smart Alerts                  | ✅     |
+| VIP Early Access                               | ✅     |
+| Featured & Sponsored Listings                  | ✅     |
+| Reserve Price Auctions                         | ✅     |
+| Buy Now + Auction                              | ✅     |
+| Live Video Auctions                            | ✅     |
+| In-App Messaging & Negotiation                 | ✅     |
+| Multi-Vendor Marketplace                       | ✅     |
+| Advanced Search Filters                        | ✅     |
+| Auction Scheduling                             | ✅     |
+| Seller Verification Badge                      | ✅     |
+| Watchlist                                      | ✅     |
 
 ## 🛠️ Tech Stack
 
@@ -47,12 +47,13 @@ mobile money integration, escrow payments, AI features, and more.
 - **Payments**: Paystack (cards, mobile money, bank transfer)
 - **Notifications**: WhatsApp Business API, Email, In-App WebSocket
 - **AI**: Rule-based engine (extendable to Claude API)
-- **Storage**: WhiteNoise (static), AWS S3 (media, optional)
+- **Storage**: WhiteNoise (static), Cloudflare R2 (media, optional)
 - **Hosting**: Render.com or Namecheap
 
 ## 🚀 Quick Start (Local Development)
 
 ### Prerequisites
+
 - Python 3.11+
 - pip
 - (Optional) Redis for Celery/Channels
@@ -161,29 +162,29 @@ ghanahammer/
 
 ## 🏛️ Database Models
 
-| Model | App | Purpose |
-|---|---|---|
-| User | accounts | Extended user with plan, KYC, MoMo |
-| SavedSearch | accounts | Smart alerts configuration |
-| SubscriptionPayment | accounts | Plan payment history |
-| SellerReview | accounts | Buyer→seller ratings |
-| Category | auctions | Hierarchical categories |
-| Auction | auctions | Core listing with all fields |
-| AuctionImage | auctions | Multiple images per listing |
-| Watchlist | auctions | User watching an auction |
-| Bid | bidding | Individual bid records |
-| AutoBid | bidding | Proxy bidding configuration |
-| BidCreditPackage | bidding | Credit pack definitions |
-| FraudFlag | bidding | Fraud detection alerts |
-| Payment | payments | Paystack transaction records |
-| EscrowAccount | payments | Escrow fund holding |
-| BankTransferInstruction | payments | Manual bank transfer details |
-| MessageThread | messaging | Conversation between users |
-| Message | messaging | Individual messages + offers |
-| Notification | notifications | In-app notification records |
-| KYCDocument | kyc | Identity verification docs |
-| AuctionView | analytics | View tracking |
-| MarketAnalytics | analytics | Pre-computed market data |
+| Model                   | App           | Purpose                            |
+| ----------------------- | ------------- | ---------------------------------- |
+| User                    | accounts      | Extended user with plan, KYC, MoMo |
+| SavedSearch             | accounts      | Smart alerts configuration         |
+| SubscriptionPayment     | accounts      | Plan payment history               |
+| SellerReview            | accounts      | Buyer→seller ratings               |
+| Category                | auctions      | Hierarchical categories            |
+| Auction                 | auctions      | Core listing with all fields       |
+| AuctionImage            | auctions      | Multiple images per listing        |
+| Watchlist               | auctions      | User watching an auction           |
+| Bid                     | bidding       | Individual bid records             |
+| AutoBid                 | bidding       | Proxy bidding configuration        |
+| BidCreditPackage        | bidding       | Credit pack definitions            |
+| FraudFlag               | bidding       | Fraud detection alerts             |
+| Payment                 | payments      | Paystack transaction records       |
+| EscrowAccount           | payments      | Escrow fund holding                |
+| BankTransferInstruction | payments      | Manual bank transfer details       |
+| MessageThread           | messaging     | Conversation between users         |
+| Message                 | messaging     | Individual messages + offers       |
+| Notification            | notifications | In-app notification records        |
+| KYCDocument             | kyc           | Identity verification docs         |
+| AuctionView             | analytics     | View tracking                      |
+| MarketAnalytics         | analytics     | Pre-computed market data           |
 
 ## 🔐 Security Features
 

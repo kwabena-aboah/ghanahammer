@@ -195,11 +195,3 @@ class AuctionBiddingConsumer(AsyncWebsocketConsumer):
             auction_id=self.auction_id,
             buyer=self.user,
         )
-   from apps.bidding.services import BiddingService
-        service = BiddingService()
-        return service.process_buy_now(
-            auction_id=self.auction_id,
-            buyer=self.user,
-        )
-elf.user,
-        )

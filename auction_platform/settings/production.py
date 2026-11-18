@@ -1,4 +1,5 @@
 from decouple import config, Csv
+from django.core.exceptions import ImproperlyConfigured
 
 from .base import *
 
@@ -28,7 +29,32 @@ if not config('USE_REDIS', default='True', cast=bool):
     }
     CELERY_TASK_ALWAYS_EAGER = True
 
-# Use S3 for media if AWS keys are set
-if AWS_ACCESS_KEY_ID:
-    DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
-    MEDIA_URL = f'https://{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com/'
+# Use Cloudflare R2 for media when its complete configuration is provided.
+r2_settings = (
+    CLOUDFLARE_ACCOUNT_ID,
+    CLOUDFLARE_R2_ACCESS_KEY_ID,
+    CLOUDFLARE_R2_SECRET_ACCESS_KEY,
+    CLOUDFLARE_R2_BUCKET_NAME,
+)
+if any(r2_settings) and not all(r2_settings):
+    raise ImproperlyConfigured(
+        'Cloudflare R2 requires account ID, access key ID, secret access key, and bucket name.'
+    )
+
+if all(r2_settings):
+    STORAGES = {
+        **STORAGES,
+        'default': {
+            'BACKEND': 'storages.backends.s3.S3Storage',
+            'OPTIONS': {
+                'access_key': CLOUDFLARE_R2_ACCESS_KEY_ID,
+                'secret_key': CLOUDFLARE_R2_SECRET_ACCESS_KEY,
+                'bucket_name': CLOUDFLARE_R2_BUCKET_NAME,
+                'endpoint_url': f'https://{CLOUDFLARE_ACCOUNT_ID}.r2.cloudflarestorage.com',
+                'region_name': 'auto',
+                'default_acl': None,
+                'querystring_auth': not bool(CLOUDFLARE_R2_PUBLIC_DOMAIN),
+                'custom_domain': CLOUDFLARE_R2_PUBLIC_DOMAIN or None,
+            },
+        },
+    }
