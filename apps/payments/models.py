@@ -124,6 +124,17 @@ class EscrowAccount(models.Model):
         (STATUS_REFUNDED, 'Refunded to Buyer'),
     ]
 
+    PAYOUT_NOT_STARTED = 'not_started'
+    PAYOUT_PENDING = 'pending'
+    PAYOUT_FAILED = 'failed'
+    PAYOUT_SUCCESS = 'success'
+    PAYOUT_STATUS_CHOICES = [
+        (PAYOUT_NOT_STARTED, 'Not Started'),
+        (PAYOUT_PENDING, 'Pending'),
+        (PAYOUT_FAILED, 'Failed'),
+        (PAYOUT_SUCCESS, 'Successful'),
+    ]
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     payment = models.OneToOneField(Payment, on_delete=models.PROTECT, related_name='escrow')
     auction = models.ForeignKey('gh_auctions.Auction', on_delete=models.PROTECT, related_name='escrow')
@@ -149,6 +160,14 @@ class EscrowAccount(models.Model):
     dispute_raised_at = models.DateTimeField(null=True, blank=True)
     dispute_resolved_at = models.DateTimeField(null=True, blank=True)
     dispute_resolution = models.TextField(blank=True)
+
+    payout_status = models.CharField(
+        max_length=20, choices=PAYOUT_STATUS_CHOICES, default=PAYOUT_NOT_STARTED
+    )
+    payout_reference = models.CharField(max_length=50, unique=True, null=True, blank=True)
+    paystack_recipient_code = models.CharField(max_length=100, blank=True)
+    paystack_transfer_code = models.CharField(max_length=100, blank=True)
+    payout_error = models.TextField(blank=True)
     
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -166,11 +185,9 @@ class EscrowAccount(models.Model):
         super().save(*args, **kwargs)
 
     def release_to_seller(self):
-        """Release escrow funds to seller"""
-        self.status = self.STATUS_RELEASED
-        self.released_at = timezone.now()
-        self.save(update_fields=['status', 'released_at'])
-        # TODO: Trigger actual Paystack payout to seller
+        """Initiate or resume a Paystack payout for this escrow."""
+        from apps.payments.paystack_service import PaystackService
+        return PaystackService().release_escrow(self)
 
     def raise_dispute(self, reason):
         self.status = self.STATUS_DISPUTED

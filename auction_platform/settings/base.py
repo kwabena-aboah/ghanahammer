@@ -286,6 +286,7 @@ SERVER_EMAIL = config(
 # Paystack
 PAYSTACK_PUBLIC_KEY = config('PAYSTACK_PUBLIC_KEY', default='pk_test_xxxx')
 PAYSTACK_SECRET_KEY = config('PAYSTACK_SECRET_KEY', default='sk_test_xxxx')
+CRON_SECRET = config('CRON_SECRET', default='')
 PAYSTACK_BASE_URL = 'https://api.paystack.co'
 
 # Meta WhatsApp Business API

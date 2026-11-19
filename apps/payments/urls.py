@@ -1,7 +1,6 @@
 """apps/payments/urls.py"""
 from django.urls import path
 from apps.payments import views
-from apps.payments.subscription_views import subscription_checkout
 
 urlpatterns = [
     path('checkout/<uuid:auction_id>/', views.checkout, name='checkout'),
@@ -11,5 +10,4 @@ urlpatterns = [
     path('escrow/<uuid:pk>/confirm/', views.confirm_receipt, name='confirm_receipt'),
     path('escrow/<uuid:pk>/dispute/', views.raise_dispute, name='raise_dispute'),
     path('webhook/paystack/', views.paystack_webhook, name='paystack_webhook'),
-    path('subscription/', subscription_checkout, name='subscription_checkout'),
 ]

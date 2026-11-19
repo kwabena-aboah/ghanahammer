@@ -36,6 +36,10 @@
       <div class="text-muted small mt-1">
         Auto-releases {{ escrow.auto_release_date|date:"M d, Y" }} if no action taken
       </div>
+      <div class="small mt-2">
+        Seller proceeds: <strong>GHS {{ escrow.payment.net_to_seller_ghs|intcomma }}</strong>
+        after platform commission.
+      </div>
     </div>
 
     <!-- Parties -->
@@ -145,10 +149,15 @@
         </div>
       </div>
       {% else %}
-      <div class="alert alert-success">
-        <i class="bi bi-check-circle-fill me-2"></i>
-        You confirmed receipt on {{ escrow.buyer_confirmed_at|date:"M d, Y" }}. Funds are being released to the seller.
-      </div>
+      {% if escrow.payout_status == 'success' %}
+      <div class="alert alert-success"><i class="bi bi-check-circle-fill me-2"></i>Receipt confirmed. Paystack completed the seller payout.</div>
+      {% elif escrow.payout_status == 'pending' %}
+      <div class="alert alert-info"><i class="bi bi-arrow-repeat me-2"></i>Receipt confirmed. Paystack is processing the seller payout.</div>
+      {% elif escrow.payout_status == 'failed' %}
+      <div class="alert alert-warning"><i class="bi bi-exclamation-triangle me-2"></i>Receipt confirmed, but the seller payout needs attention. The system will retry when possible.</div>
+      {% else %}
+      <div class="alert alert-info"><i class="bi bi-check-circle me-2"></i>Receipt confirmed on {{ escrow.buyer_confirmed_at|date:"M d, Y" }}. Seller payout is being prepared.</div>
+      {% endif %}
       {% endif %}
     </div>
     {% endif %}

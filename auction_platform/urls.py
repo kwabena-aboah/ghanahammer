@@ -4,6 +4,7 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from django.views.generic import TemplateView
+from apps.payments.views import release_mature_escrow_cron
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -15,7 +16,7 @@ urlpatterns = [
     
     # Core Platform
     path('', include('apps.gh_auctions.urls')),
-    # Payments are intentionally offline and have no public application routes.
+    path('payments/', include('apps.payments.urls')),
     path('messaging/', include('apps.messaging.urls')),
     path('analytics/', include('apps.analytics.urls')),
     path('kyc/', include('apps.kyc.urls')),
@@ -23,6 +24,7 @@ urlpatterns = [
     
     # Dashboard
     path('dashboard/', include('apps.gh_accounts.dashboard_urls')),
+    path('api/cron/release-mature-escrow/', release_mature_escrow_cron, name='release_mature_escrow_cron'),
     
     # REST API
     path('api/v1/', include([

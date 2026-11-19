@@ -14,8 +14,8 @@
         <div class="fw-bold mt-1">GHS {{ item.auction.winning_bid_amount|intcomma }}</div>
       </div>
       <div class="text-end">
-        {% if item.needs_payment %}<span class="badge bg-warning text-dark">Payment unavailable</span>
-        {% elif item.escrow %}<span class="badge bg-info text-dark">Escrow details unavailable</span>
+        {% if item.needs_payment %}<a href="{% url 'checkout' item.auction.id %}" class="btn gh-btn-sell btn-sm">Pay Now</a>
+        {% elif item.escrow %}<a href="{% url 'escrow_detail' item.escrow.pk %}" class="btn btn-outline-secondary btn-sm">View Escrow</a>
         {% else %}<span class="badge bg-success">Paid</span>{% endif %}
       </div>
     </div>

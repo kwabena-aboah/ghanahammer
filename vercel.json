@@ -26,5 +26,11 @@
       "src": "/(.*)",
       "dest": "auction_platform/wsgi.py"
     }
+  ],
+  "crons": [
+    {
+      "path": "/api/cron/release-mature-escrow/",
+      "schedule": "0 * * * *"
+    }
   ]
 }
