@@ -30,7 +30,7 @@
   "crons": [
     {
       "path": "/api/cron/release-mature-escrow/",
-      "schedule": "0 * * * *"
+      "schedule": "0 0 * * *"
     }
   ]
 }

@@ -23,6 +23,9 @@ paystack = PaystackService()
 @require_GET
 def release_mature_escrow_cron(request):
     """Run scheduled escrow releases from Vercel Cron using a shared secret."""
+    if not settings.VERCEL_CRON_ENABLED:
+        return JsonResponse({'disabled': True})
+
     if not settings.CRON_SECRET:
         logger.error('CRON_SECRET is not configured; refusing scheduled payout execution.')
         return JsonResponse({'error': 'Scheduled payouts are not configured.'}, status=503)

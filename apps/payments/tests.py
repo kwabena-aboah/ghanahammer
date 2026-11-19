@@ -1,3 +1,4 @@
+import json
 from decimal import Decimal
 from types import SimpleNamespace
 from unittest.mock import Mock, patch
@@ -94,6 +95,15 @@ class VercelPayoutCronTests(SimpleTestCase):
     def test_fails_closed_when_cron_secret_is_not_configured(self):
         response = release_mature_escrow_cron(self.factory.get('/api/cron/release-mature-escrow/'))
         self.assertEqual(response.status_code, 503)
+
+    @override_settings(CRON_SECRET='test-cron-secret', VERCEL_CRON_ENABLED=False)
+    @patch('apps.payments.tasks.release_mature_escrow')
+    def test_disabled_cron_does_not_run_payout_task(self, release_task):
+        response = release_mature_escrow_cron(self.factory.get('/api/cron/release-mature-escrow/'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(json.loads(response.content), {'disabled': True})
+        release_task.assert_not_called()
 
     @override_settings(CRON_SECRET='test-cron-secret')
     @patch('apps.payments.tasks.release_mature_escrow', return_value='Completed 0 payouts; 0 payouts pending')
