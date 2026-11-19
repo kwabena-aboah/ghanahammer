@@ -9,6 +9,7 @@ from decouple import config, Csv
 import dj_database_url
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
+IS_VERCEL = os.environ.get("VERCEL") == "1"
 
 SECRET_KEY = config('SECRET_KEY', default='1234567890-MOPINUYBHVGTRFCDEXSWQAZqazxswedcvfrtgbnhyujmkiolp[]+_)(*&ˆ%$#@!±§][}{/?>')
 
@@ -116,7 +117,7 @@ ASGI_APPLICATION = 'auction_platform.asgi.application'
 DATABASES = {
     'default': dj_database_url.config(
         default=config('DATABASE_URL', default=''),
-        conn_max_age=600,
+        conn_max_age=0 if IS_VERCEL else 600,
     )
 }
 
@@ -371,8 +372,6 @@ CACHES = {
 # }
 
 # Detect Vercel/serverless environment
-IS_VERCEL = os.environ.get("VERCEL") == "1"
-
 if IS_VERCEL:
 
     LOGGING = {
