@@ -34,10 +34,17 @@
       <!-- Main Image -->
       <div class="position-relative mb-3">
         {% with primary=auction.images.filter|first %}
+           {% if primary %}
         <img id="gh-gallery-main"
-             src="{% if primary %}{{ primary.image.url }}{% else %}{% static 'images/no-image.png' %}{% endif %}"
+             src="{{ primary.image.url }}"
              alt="{{ auction.title }}"
              class="gh-detail-img-main w-100">
+           {% else %}
+           <div class="gh-auction-img-placeholder gh-detail-img-main w-100" role="img" aria-label="No image available for {{ auction.title }}">
+          {% if auction.category.icon %}<i class="bi {{ auction.category.icon }}"></i>
+          {% else %}<i class="bi bi-image"></i>{% endif %}
+           </div>
+           {% endif %}
         {% endwith %}
 
         <!-- Status Badge -->
