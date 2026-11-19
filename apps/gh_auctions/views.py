@@ -10,6 +10,7 @@ from django.contrib import messages
 from django.http import JsonResponse, HttpResponseForbidden
 from django.views.decorators.http import require_POST
 from django.db.models import Q, Count, Avg, Sum
+from django.db.models.deletion import ProtectedError
 from django.conf import settings
 from django.utils import timezone
 from django.core.paginator import Paginator
@@ -301,6 +302,25 @@ def auction_edit(request, slug):
     })
 
 
+@login_required
+@require_POST
+def auction_delete(request, slug):
+    """Delete an owned listing only when it has no bidding or escrow history."""
+    auction = get_object_or_404(Auction, slug=slug, seller=request.user)
+    if auction.status == 'sold' or auction.bids.exists() or auction.escrow.exists():
+        messages.error(request, 'Listings with bids, sales, or escrow activity cannot be deleted.')
+        return redirect('dashboard_my_auctions')
+
+    try:
+        auction.delete()
+    except ProtectedError:
+        messages.error(request, 'This listing has related activity and cannot be deleted.')
+        return redirect('dashboard_my_auctions')
+
+    messages.success(request, 'Listing deleted.')
+    return redirect('dashboard_my_auctions')
+
+
 def _save_auction(request, auction=None):
     """Save auction from POST data"""
     from decimal import Decimal
@@ -346,18 +366,6 @@ def _save_auction(request, auction=None):
         preview_start = timezone.make_aware(preview_start, timezone.get_current_timezone())
 
     status = 'draft' if action == 'draft' else ('scheduled' if start_time > timezone.now() else 'active')
-
-    # Check plan limits
-    if status != 'draft':
-        plan = settings.AUCTION_SUBSCRIPTION_PLANS.get(request.user.plan, {})
-        max_listings = plan.get('max_listings', 5)
-        if max_listings != -1:
-            active_count = Auction.objects.filter(
-                seller=request.user, status__in=['active', 'scheduled', 'preview']
-            ).count()
-            if active_count >= max_listings:
-                messages.error(request, 'The administrator-managed listing limit has been reached.')
-                return redirect('dashboard')
 
     if auction:
         # Update existing

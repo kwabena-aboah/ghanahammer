@@ -307,10 +307,10 @@ AUCTION_SNIPER_THRESHOLD_MINUTES = 5       # Trigger if bid placed within last 5
 AUCTION_MAX_IMAGES_PER_LISTING = 20
 AUCTION_FEATURED_LISTING_PRICE_GHS = 50    # GHS per featured listing
 AUCTION_SUBSCRIPTION_PLANS = {
-    'free': {'price': 0, 'max_listings': 5, 'bid_credits': 0, 'features': []},
-    'silver': {'price': 50, 'max_listings': 20, 'bid_credits': 100, 'features': ['alerts', 'analytics_basic']},
-    'gold': {'price': 150, 'max_listings': 100, 'bid_credits': 500, 'features': ['early_access', 'analytics_full', 'featured_one']},
-    'platinum': {'price': 400, 'max_listings': -1, 'bid_credits': -1, 'features': ['all']},
+    'free': {'price': 0, 'bid_credits': 0, 'features': []},
+    'silver': {'price': 50, 'bid_credits': 100, 'features': ['alerts', 'analytics_basic']},
+    'gold': {'price': 150, 'bid_credits': 500, 'features': ['early_access', 'analytics_full', 'featured_one']},
+    'platinum': {'price': 400, 'bid_credits': -1, 'features': ['all']},
 }
 
 # Escrow & Commission

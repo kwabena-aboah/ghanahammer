@@ -9,6 +9,7 @@ urlpatterns = [
     path('auctions/bulk-import/', views.bulk_import, name='bulk_import'),
     path('auctions/<slug:slug>/', views.auction_detail, name='auction_detail'),
     path('auctions/<slug:slug>/edit/', views.auction_edit, name='auction_edit'),
+    path('auctions/<slug:slug>/delete/', views.auction_delete, name='auction_delete'),
     path('auctions/<slug:slug>/question/', views.ask_question, name='auction_ask_question'),
     path('auctions/<uuid:auction_id>/watch/', views.toggle_watchlist, name='toggle_watchlist'),
 ]

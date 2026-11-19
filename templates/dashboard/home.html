@@ -153,27 +153,6 @@
     <!-- Left column -->
     <div class="col-lg-8">
 
-      <!-- Listing usage bar -->
-      {% if max_listings != -1 %}
-      <div class="gh-card p-4 mb-4">
-        <div class="d-flex justify-content-between mb-2">
-          <span class="fw-semibold small">Listing Usage</span>
-          <span class="text-muted small">{{ listings_used }} / {{ max_listings }}</span>
-        </div>
-        <div class="progress" style="height:8px;border-radius:4px">
-          <div class="progress-bar {% if listings_pct >= 90 %}bg-danger{% elif listings_pct >= 70 %}bg-warning{% else %}bg-success{% endif %}"
-               style="width:{{ listings_pct }}%"></div>
-        </div>
-        {% if listings_pct >= 80 %}
-        <div class="mt-2 small text-warning">
-          <i class="bi bi-exclamation-triangle me-1"></i>
-          Nearly at limit.
-          Listing limits are managed by administrators.
-        </div>
-        {% endif %}
-      </div>
-      {% endif %}
-
       <!-- Ending soon - bids I'm winning -->
       {% if ending_soon_bids %}
       <div class="gh-card p-4 mb-4">

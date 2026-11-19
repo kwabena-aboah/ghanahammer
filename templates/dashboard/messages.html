@@ -6,7 +6,7 @@
   <h4 class="fw-bold mb-4"><i class="bi bi-chat-dots me-2 text-gold"></i>Messages</h4>
   <div class="gh-card">
     {% for thread in threads %}
-    {% with other=thread.participants.exclude(id=request.user.id).first %}
+    {% with other=thread.other_participant %}
     <a href="{% url 'messaging_thread' thread.id %}"
        class="d-flex gap-3 align-items-center p-3 border-bottom text-decoration-none text-dark">
       <div class="rounded-circle d-flex align-items-center justify-content-center fw-bold flex-shrink-0"

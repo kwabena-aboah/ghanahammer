@@ -7,7 +7,20 @@ from apps.messaging.models import MessageThread, Message
 
 @login_required
 def inbox(request):
-    threads = MessageThread.objects.filter(participants=request.user).order_by('-updated_at')
+    threads = MessageThread.objects.filter(
+        participants=request.user
+    ).select_related('auction').prefetch_related(
+        'participants', 'messages'
+    ).order_by('-updated_at')
+    for thread in threads:
+        participants = thread.participants.all()
+        thread.other_participant = next(
+            (participant for participant in participants if participant.pk != request.user.pk),
+            None,
+        )
+        messages_for_thread = list(thread.messages.all())
+        thread.last_message = messages_for_thread[-1] if messages_for_thread else None
+
     return render(request, 'messaging/inbox.html', {'threads': threads})
 
 

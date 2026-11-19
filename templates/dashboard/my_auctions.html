@@ -32,6 +32,12 @@
       <div class="text-end d-flex flex-column gap-1">
         <span class="badge {% if auction.status == 'active' %}bg-success{% elif auction.status == 'sold' %}bg-primary{% elif auction.status == 'draft' %}bg-secondary{% elif auction.status == 'ended' %}bg-dark{% else %}bg-warning text-dark{% endif %}">{{ auction.get_status_display }}</span>
         <a href="{% url 'auction_edit' auction.slug %}" class="btn btn-sm btn-outline-secondary">Edit</a>
+        {% if auction.bid_count == 0 and auction.status != 'sold' %}
+        <form method="post" action="{% url 'auction_delete' auction.slug %}" onsubmit="return confirm('Delete this listing? This cannot be undone.');">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-sm btn-outline-danger" aria-label="Delete {{ auction.title }}"><i class="bi bi-trash"></i> Delete</button>
+        </form>
+        {% endif %}
       </div>
     </div>
     {% empty %}

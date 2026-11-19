@@ -71,14 +71,6 @@ def dashboard_home(request):
         bidder=user
     ).select_related('auction').order_by('-placed_at')[:5]
 
-    # Plan info
-    plan = settings.AUCTION_SUBSCRIPTION_PLANS.get(user.plan, {})
-    max_listings = plan.get('max_listings', 5)
-    listings_used = Auction.objects.filter(
-        seller=user,
-        status__in=['active', 'extended', 'preview', 'scheduled']
-    ).count()
-
     return render(request, 'dashboard/home.html', {
         'active_bids': active_bids,
         'won_auctions': won_auctions,
@@ -90,9 +82,6 @@ def dashboard_home(request):
         'notifications': notifications,
         'ending_soon_bids': ending_soon_bids,
         'recent_bids': recent_bids,
-        'max_listings': max_listings,
-        'listings_used': listings_used,
-        'listings_pct': int(listings_used / max(max_listings, 1) * 100) if max_listings != -1 else 0,
     })
 
 
@@ -318,7 +307,12 @@ def messages_inbox(request):
 
     threads = MessageThread.objects.filter(
         participants=request.user
-    ).select_related('auction').order_by('-updated_at')
+    ).select_related('auction').prefetch_related('participants').order_by('-updated_at')
+    for thread in threads:
+        thread.other_participant = next(
+            (participant for participant in thread.participants.all() if participant.pk != request.user.pk),
+            None,
+        )
 
     return render(request, 'dashboard/messages.html', {
         'threads': threads,
