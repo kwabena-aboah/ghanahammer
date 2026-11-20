@@ -18,6 +18,7 @@ from django.core.paginator import Paginator
 from django.utils.dateparse import parse_datetime
 
 from django import forms
+from apps.gh_auctions.forms import CategoryForm
 
 
 from apps.gh_auctions.models import Category, Auction
@@ -342,6 +343,75 @@ def auction_delete(request, slug):
 
     messages.success(request, 'Listing deleted.')
     return redirect('dashboard_my_auctions')
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# CATEGORY MANAGEMENT
+# ─────────────────────────────────────────────────────────────────────────────
+
+@staff_required
+def category_create(request):
+    """Create a new auction category — staff/admin only."""
+    if request.method == 'POST':
+        form = CategoryForm(request.POST, request.FILES)
+        if form.is_valid():
+            category = form.save()
+            messages.success(request, f'Category "{category.name}" created successfully.')
+            return redirect('category_list')
+        # Form errors will be displayed in the template
+    else:
+        form = CategoryForm()
+
+    return render(request, 'gh_auctions/category_create.html', {
+        'form': form,
+        'page_title': 'Create Category',
+        'submit_label': 'Create Category',
+    })
+
+
+@staff_required
+def category_edit(request, pk):
+    """Edit an existing auction category — staff/admin only."""
+    category = get_object_or_404(Category, pk=pk)
+
+    if request.method == 'POST':
+        form = CategoryForm(request.POST, request.FILES, instance=category)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f'Category "{category.name}" updated successfully.')
+            return redirect('category_list')
+    else:
+        form = CategoryForm(instance=category)
+
+    return render(request, 'gh_auctions/category_create.html', {
+        'form': form,
+        'category': category,
+        'page_title': f'Edit Category — {category.name}',
+        'submit_label': 'Save Changes',
+    })
+
+
+@staff_required
+def category_list(request):
+    """List all categories — staff/admin only."""
+    categories = Category.objects.select_related('parent').order_by('sort_order', 'name')
+    return render(request, 'gh_auctions/category_list.html', {
+        'categories': categories,
+    })
+
+
+@staff_required
+@require_POST
+def category_delete(request, pk):
+    """Delete a category — staff/admin only."""
+    category = get_object_or_404(Category, pk=pk)
+    if category.auctions.exists():
+        messages.error(request, f'Cannot delete "{category.name}" — it has listings assigned to it.')
+        return redirect('category_list')
+    name = category.name
+    category.delete()
+    messages.success(request, f'Category "{name}" deleted.')
+    return redirect('category_list')
 
 
 def _save_auction(request, auction=None):

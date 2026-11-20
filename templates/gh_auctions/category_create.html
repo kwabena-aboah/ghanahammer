@@ -1,0 +1,235 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}{{ page_title }} | GhanaHammer{% endblock %}
+
+{% block extra_css %}
+<style>
+  .gh-form-section {
+    background: #fff;
+    border: 1px solid var(--gh-border);
+    border-radius: var(--gh-radius);
+    padding: 24px;
+    margin-bottom: 20px;
+  }
+  .gh-form-section-title {
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--gh-navy);
+    margin-bottom: 18px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--gh-border);
+  }
+  .icon-preview {
+    font-size: 2rem;
+    color: var(--gh-navy);
+    min-width: 48px;
+    text-align: center;
+  }
+  .image-preview-wrap img {
+    width: 120px;
+    height: 120px;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 1px solid var(--gh-border);
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-xl py-4">
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+
+      <!-- Header -->
+      <div class="d-flex align-items-center justify-content-between mb-4">
+        <h4 class="fw-bold mb-0">
+          <i class="bi bi-tags me-2 text-gold"></i>
+          {{ page_title }}
+        </h4>
+        <a href="{% url 'category_list' %}" class="btn btn-outline-secondary btn-sm">
+          <i class="bi bi-arrow-left me-1"></i>All Categories
+        </a>
+      </div>
+
+      <!-- Non-field form errors -->
+      {% if form.non_field_errors %}
+      <div class="alert alert-danger">
+        {% for error in form.non_field_errors %}
+          <div>{{ error }}</div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <form method="post" enctype="multipart/form-data" id="category-form">
+        {% csrf_token %}
+
+        <!-- ── Basic Info ─────────────────────────────────────── -->
+        <div class="gh-form-section">
+          <div class="gh-form-section-title">
+            <i class="bi bi-info-circle me-2"></i>Basic Information
+          </div>
+
+          <!-- Name -->
+          <div class="mb-3">
+            <label for="{{ form.name.id_for_label }}" class="form-label fw-semibold">
+              Category Name <span class="text-danger">*</span>
+            </label>
+            {{ form.name }}
+            {% if form.name.errors %}
+              <div class="text-danger small mt-1">{{ form.name.errors|join:", " }}</div>
+            {% endif %}
+          </div>
+
+          <!-- Slug -->
+          <div class="mb-3">
+            <label for="{{ form.slug.id_for_label }}" class="form-label fw-semibold">Slug</label>
+            {{ form.slug }}
+            <div class="form-text">{{ form.slug.help_text }}</div>
+            {% if form.slug.errors %}
+              <div class="text-danger small mt-1">{{ form.slug.errors|join:", " }}</div>
+            {% endif %}
+          </div>
+
+          <!-- Parent -->
+          <div class="mb-3">
+            <label for="{{ form.parent.id_for_label }}" class="form-label fw-semibold">Parent Category</label>
+            {{ form.parent }}
+            <div class="form-text">Leave empty to make this a top-level category.</div>
+            {% if form.parent.errors %}
+              <div class="text-danger small mt-1">{{ form.parent.errors|join:", " }}</div>
+            {% endif %}
+          </div>
+
+          <!-- Description -->
+          <div class="mb-0">
+            <label for="{{ form.description.id_for_label }}" class="form-label fw-semibold">Description</label>
+            {{ form.description }}
+            {% if form.description.errors %}
+              <div class="text-danger small mt-1">{{ form.description.errors|join:", " }}</div>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- ── Appearance ──────────────────────────────────────── -->
+        <div class="gh-form-section">
+          <div class="gh-form-section-title">
+            <i class="bi bi-palette me-2"></i>Appearance
+          </div>
+
+          <!-- Icon -->
+          <div class="mb-3">
+            <label for="{{ form.icon.id_for_label }}" class="form-label fw-semibold">Bootstrap Icon Class</label>
+            <div class="input-group">
+              <span class="input-group-text icon-preview" id="icon-preview-span">
+                <i class="bi bi-tag" id="icon-preview-el"></i>
+              </span>
+              {{ form.icon }}
+            </div>
+            <div class="form-text">
+              {{ form.icon.help_text }}
+              — browse icons at
+              <a href="https://icons.getbootstrap.com/" target="_blank" rel="noopener">icons.getbootstrap.com</a>
+            </div>
+            {% if form.icon.errors %}
+              <div class="text-danger small mt-1">{{ form.icon.errors|join:", " }}</div>
+            {% endif %}
+          </div>
+
+          <!-- Image -->
+          <div class="mb-0">
+            <label for="{{ form.image.id_for_label }}" class="form-label fw-semibold">Category Image</label>
+            {% if category.image %}
+            <div class="image-preview-wrap mb-2">
+              <img src="{{ category.image.url }}" alt="Current image">
+              <div class="form-text mt-1">Current image — upload a new one to replace it.</div>
+            </div>
+            {% endif %}
+            {{ form.image }}
+            <div class="form-text">Optional. Used in category banners and navigation cards.</div>
+            {% if form.image.errors %}
+              <div class="text-danger small mt-1">{{ form.image.errors|join:", " }}</div>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- ── Settings ───────────────────────────────────────── -->
+        <div class="gh-form-section">
+          <div class="gh-form-section-title">
+            <i class="bi bi-gear me-2"></i>Settings
+          </div>
+
+          <div class="row g-3">
+            <!-- Sort Order -->
+            <div class="col-md-6">
+              <label for="{{ form.sort_order.id_for_label }}" class="form-label fw-semibold">Sort Order</label>
+              {{ form.sort_order }}
+              <div class="form-text">{{ form.sort_order.help_text }}</div>
+              {% if form.sort_order.errors %}
+                <div class="text-danger small mt-1">{{ form.sort_order.errors|join:", " }}</div>
+              {% endif %}
+            </div>
+
+            <!-- Is Active -->
+            <div class="col-md-6 d-flex align-items-center pt-3">
+              <div class="form-check form-switch ms-1">
+                {{ form.is_active }}
+                <label class="form-check-label fw-semibold ms-2" for="{{ form.is_active.id_for_label }}">
+                  Active
+                </label>
+                <div class="form-text">Only active categories appear in navigation and filters.</div>
+              </div>
+              {% if form.is_active.errors %}
+                <div class="text-danger small mt-1">{{ form.is_active.errors|join:", " }}</div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Actions ────────────────────────────────────────── -->
+        <div class="d-flex gap-2 justify-content-end">
+          <a href="{% url 'category_list' %}" class="btn btn-outline-secondary">Cancel</a>
+          <button type="submit" class="btn gh-btn-sell">
+            <i class="bi bi-check-lg me-1"></i>{{ submit_label }}
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  // Live Bootstrap icon preview
+  const iconInput = document.getElementById('{{ form.icon.id_for_label }}');
+  const iconEl    = document.getElementById('icon-preview-el');
+
+  if (iconInput && iconEl) {
+    function updateIcon() {
+      const val = iconInput.value.trim();
+      iconEl.className = val ? `bi ${val}` : 'bi bi-tag';
+    }
+    iconInput.addEventListener('input', updateIcon);
+    updateIcon();  // set on page load for edit mode
+  }
+
+  // Auto-generate slug from name if slug is blank
+  const nameInput = document.getElementById('{{ form.name.id_for_label }}');
+  const slugInput = document.getElementById('{{ form.slug.id_for_label }}');
+
+  if (nameInput && slugInput) {
+    nameInput.addEventListener('input', function () {
+      if (slugInput.value === '') {
+        slugInput.value = nameInput.value
+          .toLowerCase()
+          .trim()
+          .replace(/[^\w\s-]/g, '')
+          .replace(/[\s_]+/g, '-')
+          .replace(/^-+|-+$/g, '');
+      }
+    });
+  }
+</script>
+{% endblock %}

@@ -12,4 +12,11 @@ urlpatterns = [
     path('auctions/<slug:slug>/delete/', views.auction_delete, name='auction_delete'),
     path('auctions/<slug:slug>/question/', views.ask_question, name='auction_ask_question'),
     path('auctions/<uuid:auction_id>/watch/', views.toggle_watchlist, name='toggle_watchlist'),
+
+    # Category management (staff only)
+    path('categories/', views.category_list, name='category_list'),
+    path('categories/create/', views.category_create, name='category_create'),
+    path('categories/<int:pk>/edit/', views.category_edit, name='category_edit'),
+    path('categories/<int:pk>/delete/', views.category_delete, name='category_delete'),
 ]
+

@@ -1,0 +1,121 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}Manage Categories | GhanaHammer{% endblock %}
+
+{% block content %}
+<div class="container-xl py-4">
+
+  <!-- Header -->
+  <div class="d-flex align-items-center justify-content-between mb-4">
+    <h4 class="fw-bold mb-0">
+      <i class="bi bi-tags me-2 text-gold"></i>
+      Manage Categories
+    </h4>
+    <a href="{% url 'category_create' %}" class="btn gh-btn-sell">
+      <i class="bi bi-plus-lg me-1"></i>New Category
+    </a>
+  </div>
+
+  {% if messages %}
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show" role="alert">
+      {{ message }}
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endfor %}
+  {% endif %}
+
+  <div class="gh-card p-0">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th style="width:40px">#</th>
+            <th>Name</th>
+            <th>Slug</th>
+            <th>Parent</th>
+            <th class="text-center">Sort</th>
+            <th class="text-center">Status</th>
+            <th class="text-center">Listings</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for cat in categories %}
+          <tr>
+            <td class="text-muted small">{{ cat.pk }}</td>
+            <td>
+              <div class="d-flex align-items-center gap-2">
+                {% if cat.icon %}
+                  <i class="bi {{ cat.icon }} text-gold fs-5"></i>
+                {% else %}
+                  <i class="bi bi-tag text-muted fs-5"></i>
+                {% endif %}
+                <div>
+                  <div class="fw-semibold">{{ cat.name }}</div>
+                  {% if cat.description %}
+                  <div class="text-muted" style="font-size:12px">{{ cat.description|truncatechars:60 }}</div>
+                  {% endif %}
+                </div>
+              </div>
+            </td>
+            <td><code class="small">{{ cat.slug }}</code></td>
+            <td>
+              {% if cat.parent %}
+                <span class="badge bg-light text-dark border">{{ cat.parent.name }}</span>
+              {% else %}
+                <span class="text-muted small">—</span>
+              {% endif %}
+            </td>
+            <td class="text-center">{{ cat.sort_order }}</td>
+            <td class="text-center">
+              {% if cat.is_active %}
+                <span class="badge bg-success">Active</span>
+              {% else %}
+                <span class="badge bg-secondary">Inactive</span>
+              {% endif %}
+            </td>
+            <td class="text-center">
+              <span class="badge bg-light text-dark border">{{ cat.auctions.count }}</span>
+            </td>
+            <td class="text-end">
+              <div class="d-flex gap-1 justify-content-end">
+                <a href="{% url 'category_edit' cat.pk %}"
+                   class="btn btn-sm btn-outline-primary"
+                   title="Edit">
+                  <i class="bi bi-pencil"></i>
+                </a>
+                {% if not cat.auctions.exists %}
+                <form method="post" action="{% url 'category_delete' cat.pk %}"
+                      onsubmit="return confirm('Delete category \'{{ cat.name }}\'? This cannot be undone.')">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </form>
+                {% else %}
+                <button class="btn btn-sm btn-outline-danger" disabled
+                        title="Cannot delete — has listings assigned">
+                  <i class="bi bi-trash"></i>
+                </button>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="8" class="text-center text-muted py-5">
+              <i class="bi bi-tags fs-3 d-block mb-2"></i>
+              No categories yet.
+              <a href="{% url 'category_create' %}">Create the first one</a>.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
