@@ -21,7 +21,7 @@ from django import forms
 from apps.gh_auctions.forms import CategoryForm
 
 
-from apps.gh_auctions.models import Category, Auction, Watchlist
+from apps.gh_auctions.models import Category, Auction, Watchlist, BulkImportBatch, AuctionImage, AuctionDocument, AuctionQuestion
 from apps.bidding.models import Bid
 
 logger = logging.getLogger(__name__)
