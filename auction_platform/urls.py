@@ -9,8 +9,7 @@ from apps.payments.views import release_mature_escrow_cron
 urlpatterns = [
     path('admin/', admin.site.urls),
     
-    # Auth: public registration is disabled; allauth handles administrator login.
-    path('accounts/signup/', include('apps.gh_accounts.signup_disabled_urls')),
+    # Auth — allauth handles login, logout, signup, password reset, etc.
     path('accounts/', include('allauth.urls')),
     path('auth/', include('apps.gh_accounts.urls')),
     

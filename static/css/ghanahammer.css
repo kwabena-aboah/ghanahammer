@@ -486,6 +486,49 @@ a:hover { color: var(--gh-gold-dark); }
 .gh-skeleton { background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 4px; }
 @keyframes shimmer { to { background-position: -200% 0; } }
 
+/* ─── Dashboard Sub-Navigation ──────────────────────────────── */
+.gh-dashboard-nav {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  white-space: nowrap;
+  padding: 4px 2px 10px 2px;
+  -webkit-overflow-scrolling: touch;
+}
+.gh-dashboard-nav::-webkit-scrollbar {
+  display: none;
+}
+.gh-dashboard-nav a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 500;
+  text-decoration: none;
+  background: #ffffff;
+  color: var(--gh-navy);
+  border: 1px solid var(--gh-border);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  transition: all .2s ease;
+  flex-shrink: 0;
+}
+.gh-dashboard-nav a:hover {
+  background: #f8fafc;
+  border-color: var(--gh-navy);
+  color: var(--gh-navy);
+}
+.gh-dashboard-nav a.active {
+  background: var(--gh-navy);
+  color: #ffffff;
+  border-color: var(--gh-navy);
+  box-shadow: 0 4px 12px rgba(15,23,42,0.18);
+}
+.gh-dashboard-nav a.active i {
+  color: var(--gh-gold);
+}
+
 /* ─── Responsive ─────────────────────────────────────────────── */
 @media (max-width: 768px) {
   .gh-hero { padding: 36px 0; }
@@ -494,4 +537,8 @@ a:hover { color: var(--gh-gold-dark); }
   .gh-notif-dropdown { width: 100vw; right: -16px; }
   .gh-toast-container { bottom: 16px; right: 16px; left: 16px; }
   .gh-toast { max-width: 100%; }
+  .gh-stat-card { padding: 14px 14px; gap: 12px; }
+  .gh-stat-icon { width: 42px; height: 42px; font-size: 1.15rem; flex-shrink: 0; }
+  .gh-stat-value { font-size: 1.25rem; }
+  .gh-stat-label { font-size: 11px; }
 }

@@ -5,7 +5,7 @@ Homepage, listing, detail, create/edit, search, watchlist toggle
 import json
 import logging
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.http import JsonResponse, HttpResponseForbidden
 from django.views.decorators.http import require_POST
@@ -20,6 +20,21 @@ from apps.gh_auctions.models import Auction, Category, AuctionImage, Watchlist, 
 from apps.bidding.models import Bid
 
 logger = logging.getLogger(__name__)
+
+import functools
+
+# Only staff/admin users may create or manage listings.
+def staff_required(view_func):
+    @functools.wraps(view_func)
+    def _wrapped_view(request, *args, **kwargs):
+        if not (request.user.is_authenticated and request.user.is_active and request.user.is_staff):
+            messages.info(
+                request,
+                "Administrators are the only ones allowed to sell or post listings. If you have listings to post, please contact an administrator."
+            )
+            return redirect('auction_list')
+        return view_func(request, *args, **kwargs)
+    return _wrapped_view
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -258,9 +273,9 @@ def auction_detail(request, slug):
 # CREATE / EDIT AUCTION
 # ─────────────────────────────────────────────────────────────────────────────
 
-@login_required
+@staff_required
 def auction_create(request):
-    """Create a new auction listing for the signed-in seller."""
+    """Create a new auction listing — staff/admin only."""
     if request.method == 'POST':
         return _save_auction(request, auction=None)
 
@@ -277,10 +292,10 @@ def auction_create(request):
     })
 
 
-@login_required
+@staff_required
 def auction_edit(request, slug):
-    """Edit the signed-in seller's draft or scheduled auction listing."""
-    auction = get_object_or_404(Auction, slug=slug, seller=request.user)
+    """Edit an auction listing — staff/admin only."""
+    auction = get_object_or_404(Auction, slug=slug)
     if auction.status not in ['draft', 'scheduled']:
         messages.error(request, 'Active auctions cannot be edited once bidding has started.')
         return redirect('auction_detail', slug=auction.slug)
@@ -302,11 +317,11 @@ def auction_edit(request, slug):
     })
 
 
-@login_required
+@staff_required
 @require_POST
 def auction_delete(request, slug):
-    """Delete an owned listing only when it has no bidding or escrow history."""
-    auction = get_object_or_404(Auction, slug=slug, seller=request.user)
+    """Delete a listing — staff/admin only."""
+    auction = get_object_or_404(Auction, slug=slug)
     if auction.status == 'sold' or auction.bids.exists() or auction.escrow.exists():
         messages.error(request, 'Listings with bids, sales, or escrow activity cannot be deleted.')
         return redirect('dashboard_my_auctions')
@@ -478,9 +493,9 @@ def ask_question(request, slug):
 # BULK IMPORT
 # ─────────────────────────────────────────────────────────────────────────────
 
-@login_required
+@staff_required
 def bulk_import(request):
-    """Upload a CSV or Excel file to create auction listings."""
+    """Upload a CSV or Excel file to create auction listings — staff/admin only."""
     if request.method == 'POST':
         file = request.FILES.get('import_file')
         if not file:

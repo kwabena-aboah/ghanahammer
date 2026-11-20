@@ -5,14 +5,23 @@
 
 {% block content %}
 <div class="container-xl py-4">
-  <div class="d-flex justify-content-between align-items-center mb-4">
+  {% include "dashboard/partials/nav.html" with active_tab="active_bids" %}
+
+  <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
     <div>
       <h4 class="fw-bold mb-1"><i class="bi bi-hammer me-2 text-gold"></i>Active Bids</h4>
-      <p class="text-muted mb-0">Current winning bids and bidder contact details for inspection and pickup.</p>
+      <p class="text-muted mb-0">
+        {% if is_staff_view %}
+        All current winning bids and bidder contact details for inspection and pickup follow-up (Staff View).
+        {% else %}
+        Auctions you are currently participating in that are active or closing soon.
+        {% endif %}
+      </p>
     </div>
     <span class="badge bg-primary fs-6">{{ total_count }} active</span>
   </div>
 
+  {% if is_staff_view %}
   <div class="alert alert-warning small">
     <i class="bi bi-shield-lock me-1"></i>
     This page contains private bidder information and is visible to staff only.
@@ -54,5 +63,41 @@
       </tbody>
     </table>
   </div>
+  {% else %}
+  <!-- Regular User Active Bids -->
+  <div class="gh-card">
+    {% for bid in bids %}
+    <div class="d-flex gap-3 align-items-center p-3 border-bottom flex-wrap">
+      {% with img=bid.auction.images.first %}
+      {% if img %}
+      <img src="{{ img.image.url }}" width="60" height="60" class="rounded" style="object-fit:cover">
+      {% else %}
+      <div class="rounded d-flex align-items-center justify-content-center" style="width:60px;height:60px;background:var(--gh-bg)">🏷️</div>
+      {% endif %}
+      {% endwith %}
+      <div class="flex-grow-1">
+        <a href="{{ bid.auction.get_absolute_url }}" class="fw-semibold small d-block">{{ bid.auction.title }}</a>
+        <div style="font-size:12px" class="text-muted">
+          Lot {{ bid.auction.lot_number }} · Your bid: <strong class="text-dark">GHS {{ bid.amount|intcomma }}</strong>
+          {% if bid.source == 'auto' %}<span class="badge bg-info ms-1">Auto</span>{% endif %}
+        </div>
+        <div class="text-muted" style="font-size:11px">Ends: {{ bid.auction.end_time|date:"M d, Y H:i" }}</div>
+      </div>
+      <div class="text-end d-flex flex-column align-items-end gap-1">
+        <span class="badge {% if bid.status == 'winning' %}bg-success{% elif bid.status == 'outbid' %}bg-danger{% else %}bg-secondary{% endif %}">
+          {{ bid.get_status_display }}
+        </span>
+        <a href="{{ bid.auction.get_absolute_url }}" class="btn btn-sm gh-btn-sell mt-1">View / Bid</a>
+      </div>
+    </div>
+    {% empty %}
+    <div class="text-center py-5 text-muted">
+      <i class="bi bi-hammer fs-1 d-block mb-3"></i>
+      <p>You have no active bids on open auctions.</p>
+      <a href="{% url 'auction_list' %}" class="btn gh-btn-sell btn-sm">Browse Auctions</a>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
 </div>
 {% endblock %}

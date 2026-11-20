@@ -1,0 +1,16 @@
+<div class="gh-dashboard-nav mb-4">
+  <a href="{% url 'dashboard' %}" class="{% if active_tab == 'overview' %}active{% endif %}"><i class="bi bi-speedometer2"></i> Overview</a>
+  <a href="{% url 'dashboard_active_bids' %}" class="{% if active_tab == 'active_bids' %}active{% endif %}"><i class="bi bi-hammer"></i> Active Bids</a>
+  <a href="{% url 'dashboard_my_bids' %}" class="{% if active_tab == 'my_bids' %}active{% endif %}"><i class="bi bi-clock-history"></i> My Bids</a>
+  <a href="{% url 'dashboard_purchases' %}" class="{% if active_tab == 'purchases' %}active{% endif %}"><i class="bi bi-trophy"></i> Won</a>
+  <a href="{% url 'dashboard_watchlist' %}" class="{% if active_tab == 'watchlist' %}active{% endif %}"><i class="bi bi-heart"></i> Watchlist</a>
+  <a href="{% url 'dashboard_subscription' %}" class="{% if active_tab == 'subscription' %}active{% endif %}"><i class="bi bi-coin"></i> Credits</a>
+  <a href="{% url 'dashboard_saved_searches' %}" class="{% if active_tab == 'saved_searches' %}active{% endif %}"><i class="bi bi-bell"></i> Alerts</a>
+  <a href="{% url 'dashboard_messages' %}" class="{% if active_tab == 'messages' %}active{% endif %}"><i class="bi bi-chat-dots"></i> Messages</a>
+  <a href="{% url 'kyc_overview' %}" class="{% if active_tab == 'kyc' %}active{% endif %}"><i class="bi bi-shield-check"></i> KYC</a>
+  <a href="{% url 'dashboard_settings' %}" class="{% if active_tab == 'settings' %}active{% endif %}"><i class="bi bi-gear"></i> Settings</a>
+  {% if request.user.is_staff or user.is_staff %}
+  <a href="{% url 'dashboard_my_auctions' %}" class="{% if active_tab == 'my_auctions' %}active{% endif %}"><i class="bi bi-tag text-gold"></i> Manage Listings</a>
+  <a href="{% url 'seller_analytics' %}" class="{% if active_tab == 'analytics' %}active{% endif %}"><i class="bi bi-graph-up text-gold"></i> Analytics</a>
+  {% endif %}
+</div>

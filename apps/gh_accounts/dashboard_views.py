@@ -71,11 +71,17 @@ def dashboard_home(request):
         bidder=user
     ).select_related('auction').order_by('-placed_at')[:5]
 
+    # Marketplace active listings count
+    marketplace_active_listings = Auction.objects.filter(
+        status__in=['active', 'extended']
+    ).count()
+
     return render(request, 'dashboard/home.html', {
         'active_bids': active_bids,
         'won_auctions': won_auctions,
         'watchlist_count': watchlist_count,
         'active_listings': active_listings,
+        'marketplace_active_listings': marketplace_active_listings,
         'total_revenue': total_revenue,
         'pending_payments': pending_payments,
         'escrow_pending': escrow_pending,
@@ -117,27 +123,36 @@ def my_bids(request):
     })
 
 
-@staff_member_required
+@login_required
 def active_bids(request):
-    """Show current winning bids to staff for inspection and pickup follow-up."""
+    """Show current winning bids. If staff, show all for pickup follow-up. If regular user, show user's active bids."""
     from apps.bidding.models import Bid
 
-    bids = Bid.objects.filter(
-        status=Bid.STATUS_WINNING,
-        auction__status__in=['active', 'extended', 'closing'],
-    ).select_related(
-        'auction', 'auction__seller', 'bidder'
-    ).order_by('auction__end_time', '-amount')
+    if request.user.is_staff:
+        bids = Bid.objects.filter(
+            status=Bid.STATUS_WINNING,
+            auction__status__in=['active', 'extended', 'closing'],
+        ).select_related(
+            'auction', 'auction__seller', 'bidder'
+        ).prefetch_related('auction__images').order_by('auction__end_time', '-amount')
+    else:
+        bids = Bid.objects.filter(
+            bidder=request.user,
+            auction__status__in=['active', 'extended', 'closing'],
+        ).select_related(
+            'auction', 'auction__seller'
+        ).prefetch_related('auction__images').order_by('auction__end_time', '-amount')
 
     return render(request, 'dashboard/active_bids.html', {
         'bids': bids,
         'total_count': bids.count(),
+        'is_staff_view': request.user.is_staff,
     })
 
 
-@login_required
+@staff_member_required
 def my_auctions(request):
-    """Seller's own auction listings"""
+    """Seller's own auction listings (administrators only)"""
     from apps.gh_auctions.models import Auction, BulkImportBatch
 
     status_filter = request.GET.get('status', '')
@@ -229,9 +244,9 @@ def purchases(request):
     })
 
 
-@login_required
+@staff_member_required
 def analytics_redirect(request):
-    """Redirect to seller analytics"""
+    """Redirect to seller analytics (administrators only)"""
     return redirect('seller_analytics')
 
 

@@ -1,11 +1,13 @@
 """apps/analytics/views.py"""
 import json
 from decimal import Decimal
-from django.shortcuts import render
-from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.http import JsonResponse
 from apps.analytics.models import SellerAnalyticsService, MarketAnalytics
 from apps.gh_auctions.models import Category
+
+staff_required = user_passes_test(lambda u: u.is_authenticated and u.is_staff, login_url='dashboard')
 
 
 def decimal_default(obj):
@@ -14,7 +16,7 @@ def decimal_default(obj):
     raise TypeError
 
 
-@login_required
+@staff_required
 def seller_analytics(request):
 
     days = int(request.GET.get('days', 30))

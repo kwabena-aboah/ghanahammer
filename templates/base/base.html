@@ -106,23 +106,46 @@
           <ul class="dropdown-menu dropdown-menu-end gh-user-menu">
             <li><a class="dropdown-item" href="{% url 'dashboard' %}"><i class="bi bi-speedometer2 me-2"></i>Dashboard</a></li>
             <li><a class="dropdown-item" href="{% url 'dashboard_my_bids' %}"><i class="bi bi-hammer me-2"></i>My Bids</a></li>
-            {% if user.is_staff %}<li><a class="dropdown-item" href="{% url 'dashboard_active_bids' %}"><i class="bi bi-people me-2"></i>Active Bids</a></li>{% endif %}
-            <li><a class="dropdown-item" href="{% url 'dashboard_my_auctions' %}"><i class="bi bi-tag me-2"></i>My Listings</a></li>
+            <li><a class="dropdown-item" href="{% url 'dashboard_active_bids' %}"><i class="bi bi-people me-2"></i>Active Bids</a></li>
+            <li><a class="dropdown-item" href="{% url 'dashboard_watchlist' %}"><i class="bi bi-heart me-2"></i>Watchlist</a></li>
+            <li><a class="dropdown-item" href="{% url 'dashboard_purchases' %}"><i class="bi bi-bag-check me-2"></i>Auctions Won</a></li>
+            <li><a class="dropdown-item" href="{% url 'dashboard_saved_searches' %}"><i class="bi bi-bell me-2"></i>Saved Searches & Alerts</a></li>
+            <li><a class="dropdown-item" href="{% url 'dashboard_messages' %}"><i class="bi bi-chat-dots me-2"></i>Messages</a></li>
+            <li><a class="dropdown-item" href="{% url 'dashboard_subscription' %}"><i class="bi bi-coin me-2"></i>Bid Credits</a></li>
+            {% if user.is_staff %}
             <li><hr class="dropdown-divider"></li>
+            <li><h6 class="dropdown-header text-uppercase small" style="color:var(--gh-gold)">Administrator</h6></li>
+            <li><a class="dropdown-item" href="{% url 'dashboard_my_auctions' %}"><i class="bi bi-tag me-2"></i>Manage Listings</a></li>
+            <li><a class="dropdown-item" href="{% url 'bulk_import' %}"><i class="bi bi-upload me-2"></i>Bulk Import</a></li>
+            <li><a class="dropdown-item" href="{% url 'seller_analytics' %}"><i class="bi bi-graph-up me-2"></i>Seller Analytics</a></li>
+            {% endif %}
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="{% url 'dashboard_settings' %}"><i class="bi bi-gear me-2"></i>Settings</a></li>
             <li><a class="dropdown-item" href="{% url 'account_logout' %}"><i class="bi bi-box-arrow-right me-2"></i>Sign Out</a></li>
           </ul>
         </li>
 
-        <!-- Signed-in users can create auction listings -->
+        <!-- Sell Now Action -->
         <li class="nav-item ms-lg-2">
+          {% if user.is_staff %}
           <a class="btn gh-btn-sell" href="{% url 'auction_create' %}">
             <i class="bi bi-plus-circle me-1"></i>Sell Now
           </a>
+          {% else %}
+          <button type="button" class="btn gh-btn-sell" data-bs-toggle="modal" data-bs-target="#adminSellNoticeModal">
+            <i class="bi bi-plus-circle me-1"></i>Sell Now
+          </button>
+          {% endif %}
         </li>
 
         {% else %}
         <li class="nav-item">
           <a class="nav-link" href="{% url 'account_login' %}">Sign In</a>
+        </li>
+        <li class="nav-item ms-lg-2">
+          <button type="button" class="btn gh-btn-sell" data-bs-toggle="modal" data-bs-target="#adminSellNoticeModal">
+            <i class="bi bi-plus-circle me-1"></i>Sell Now
+          </button>
         </li>
         {% endif %}
 
@@ -328,6 +351,48 @@
 })();
 </script>
 {% endif %}
+
+<!-- Admin Sell Notice Modal -->
+<div class="modal fade" id="adminSellNoticeModal" tabindex="-1" aria-labelledby="adminSellNoticeModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow-lg" style="border-radius:18px; overflow:hidden;">
+      <div class="modal-header border-0 bg-dark text-white p-4">
+        <div class="d-flex align-items-center gap-3">
+          <div style="width:48px; height:48px; border-radius:12px; background:rgba(240,165,0,0.18); display:flex; align-items:center; justify-content:center; color:var(--gh-gold);">
+            <i class="bi bi-shield-lock-fill fs-3"></i>
+          </div>
+          <div>
+            <h5 class="modal-title fw-bold mb-0" id="adminSellNoticeModalLabel">Administrator Notice</h5>
+            <small class="text-white-50">Verified Listing Policy</small>
+          </div>
+        </div>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-4 text-center">
+        <div class="mb-3">
+          <span class="badge bg-warning bg-opacity-10 text-warning px-3 py-2 rounded-pill fw-semibold" style="font-size:12px;">
+            <i class="bi bi-info-circle me-1"></i> Admin-Managed Auctions
+          </span>
+        </div>
+        <h6 class="fw-bold text-dark mb-2">Administrators are the only ones allowed to post listings</h6>
+        <p class="text-muted small mb-4">
+          To maintain high auction integrity and prevent unauthorized postings, all machinery, vehicles, and equipment are cataloged and listed exclusively by system administrators. If you have items or listings to post, please contact the administrator team to get your items listed.
+        </p>
+        <div class="d-grid gap-2">
+          <a href="mailto:admin@ghanahammer.com?subject=Listing%20Request" class="btn gh-btn-sell py-2 fw-semibold">
+            <i class="bi bi-envelope-fill me-2"></i>Contact Administrator to List
+          </a>
+          <a href="{% url 'auction_list' %}" class="btn btn-outline-secondary py-2">
+            <i class="bi bi-grid-3x3-gap me-2"></i>Browse Listings &amp; Auctions
+          </a>
+        </div>
+      </div>
+      <div class="modal-footer border-0 bg-light py-2 px-4 justify-content-center">
+        <small class="text-muted">You can actively bid, message, win, and make secure payments on any live auction.</small>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- Toast Container -->
 <div id="gh-toast-container" class="gh-toast-container"></div>

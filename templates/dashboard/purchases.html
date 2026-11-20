@@ -3,7 +3,8 @@
 {% block title %}My Purchases | MachineAuction{% endblock %}
 {% block content %}
 <div class="container-xl py-4">
-  <h4 class="fw-bold mb-4"><i class="bi bi-bag-check me-2 text-gold"></i>My Purchases</h4>
+  {% include "dashboard/partials/nav.html" with active_tab="purchases" %}
+  <h4 class="fw-bold mb-4"><i class="bi bi-trophy me-2 text-gold"></i>Auctions Won &amp; Purchases</h4>
   {% for item in purchases %}
   <div class="gh-card p-4 mb-3">
     <div class="d-flex gap-3 align-items-start flex-wrap">
