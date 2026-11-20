@@ -99,9 +99,6 @@
             <div class="gh-nav-avatar-placeholder">{{ user.first_name|first|upper }}</div>
             {% endif %}
             <span class="d-none d-lg-inline">{{ user.first_name }}</span>
-            {% if user.plan != 'free' %}
-            <span class="badge gh-plan-badge gh-plan-{{ user.plan }}">{{ user.plan|upper }}</span>
-            {% endif %}
           </a>
           <ul class="dropdown-menu dropdown-menu-end gh-user-menu">
             <li><a class="dropdown-item" href="{% url 'dashboard' %}"><i class="bi bi-speedometer2 me-2"></i>Dashboard</a></li>
@@ -111,7 +108,6 @@
             <li><a class="dropdown-item" href="{% url 'dashboard_purchases' %}"><i class="bi bi-bag-check me-2"></i>Auctions Won</a></li>
             <li><a class="dropdown-item" href="{% url 'dashboard_saved_searches' %}"><i class="bi bi-bell me-2"></i>Saved Searches & Alerts</a></li>
             <li><a class="dropdown-item" href="{% url 'dashboard_messages' %}"><i class="bi bi-chat-dots me-2"></i>Messages</a></li>
-            <li><a class="dropdown-item" href="{% url 'dashboard_subscription' %}"><i class="bi bi-coin me-2"></i>Bid Credits</a></li>
             {% if user.is_staff %}
             <li><hr class="dropdown-divider"></li>
             <li><h6 class="dropdown-header text-uppercase small" style="color:var(--gh-gold)">Administrator</h6></li>

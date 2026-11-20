@@ -43,7 +43,19 @@ def close_expired_auctions():
                 auction.status = Auction.STATUS_SOLD
                 auction.winner = winning_bid.bidder
                 auction.winning_bid_amount = winning_bid.amount
-                auction.save(update_fields=['status', 'winner', 'winning_bid_amount'])
+                if winning_bid.bidder:
+                    auction.winner_name = winning_bid.bidder.get_full_name() or winning_bid.bidder.username
+                    auction.winner_email = winning_bid.bidder.email
+                    auction.winner_phone = winning_bid.bidder_phone or winning_bid.bidder.phone
+                else:
+                    auction.winner_name = winning_bid.bidder_name
+                    auction.winner_email = winning_bid.bidder_email
+                    auction.winner_phone = winning_bid.bidder_phone
+                auction.winner_pickup_notes = winning_bid.pickup_notes
+                auction.save(update_fields=[
+                    'status', 'winner', 'winning_bid_amount',
+                    'winner_name', 'winner_email', 'winner_phone', 'winner_pickup_notes'
+                ])
 
                 winning_bid.status = Bid.STATUS_WON
                 winning_bid.save(update_fields=['status'])
@@ -84,22 +96,18 @@ def close_expired_auctions():
 
 @shared_task(name='activate_scheduled_auctions')
 def activate_scheduled_auctions():
-    """Activate auctions that have reached their start_time"""
+    """Activate auctions that have reached their start_time (both scheduled and preview)"""
     from apps.gh_auctions.models import Auction
     from apps.notifications.services import NotificationService
     from apps.gh_accounts.models import SavedSearch
 
     now = timezone.now()
     to_activate = Auction.objects.filter(
-        status='scheduled',
+        status__in=['scheduled', 'preview'],
         start_time__lte=now,
     )
 
     for auction in to_activate:
-        # Check if VIP preview phase is still active
-        if auction.preview_start and auction.preview_start > now:
-            continue  # Not yet time
-
         auction.status = Auction.STATUS_ACTIVE
         auction.save(update_fields=['status'])
         logger.info(f'Auction {auction.lot_number} activated')

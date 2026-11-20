@@ -21,8 +21,8 @@ mobile money integration, escrow payments, AI features, and more.
 | Demand Forecasting                             | ✅     |
 | Fraud Detection                                | ✅     |
 | Seller Analytics Dashboard                     | ✅     |
-| Subscription Plans (Free/Silver/Gold/Platinum) | ✅     |
-| Bid Credits                                    | ✅     |
+| Exclusive auction privileges for all signed‑in users | ✅     |
+| Admin‑only listing creation                        | ✅     |
 | Bulk CSV/Excel Import                          | ✅     |
 | Saved Searches & Smart Alerts                  | ✅     |
 | VIP Early Access                               | ✅     |

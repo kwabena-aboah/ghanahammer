@@ -8,7 +8,6 @@ Run this in Django shell after migrations:
 
 def create_initial_data():
     from apps.gh_auctions.models import Category
-    from apps.bidding.models import BidCreditPackage
 
     print("Creating categories...")
     categories = [
@@ -75,29 +74,8 @@ def create_initial_data():
         else:
             print(f"  - Exists: {name}")
 
-    print("\nCreating bid credit packages...")
-    packages = [
-        ('Starter Pack', 50, 49.00, 0),
-        ('Value Pack', 150, 120.00, 20),
-        ('Power Pack', 500, 350.00, 100),
-        ('Mega Pack', 1000, 600.00, 250),
-    ]
-    for name, credits, price, bonus in packages:
-        pkg, created = BidCreditPackage.objects.get_or_create(
-            name=name,
-            defaults={
-                'credits': credits,
-                'price_ghs': price,
-                'bonus_credits': bonus,
-                'is_active': True,
-            }
-        )
-        if created:
-            print(f"  ✓ Created: {name} ({credits}+{bonus} credits for GHS {price})")
-
     print("\n✅ Initial data setup complete!")
     print(f"   Categories created: {Category.objects.count()}")
-    print(f"   Credit packages: {BidCreditPackage.objects.count()}")
 
 
 if __name__ == '__main__':

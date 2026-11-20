@@ -22,17 +22,6 @@ import uuid
 class User(AbstractUser):
     """Extended user model for GhanaHammer"""
     
-    PLAN_FREE = 'free'
-    PLAN_SILVER = 'silver'
-    PLAN_GOLD = 'gold'
-    PLAN_PLATINUM = 'platinum'
-    PLAN_CHOICES = [
-        (PLAN_FREE, 'Free'),
-        (PLAN_SILVER, 'Silver'),
-        (PLAN_GOLD, 'Gold'),
-        (PLAN_PLATINUM, 'Platinum'),
-    ]
-    
     ROLE_BUYER = 'buyer'
     ROLE_SELLER = 'seller'
     ROLE_BOTH = 'both'
@@ -48,8 +37,6 @@ class User(AbstractUser):
     email = models.EmailField(unique=True)
     phone = models.CharField(max_length=20, blank=True)
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default=ROLE_BOTH)
-    plan = models.CharField(max_length=20, choices=PLAN_CHOICES, default=PLAN_FREE)
-    plan_expiry = models.DateTimeField(null=True, blank=True)
     
     # Profile
     avatar = models.ImageField(upload_to='avatars/', null=True, blank=True)
@@ -71,8 +58,7 @@ class User(AbstractUser):
     two_factor_enabled = models.BooleanField(default=False)
     totp_secret = models.CharField(max_length=32, blank=True)
     
-    # Credits & Stats
-    bid_credits = models.PositiveIntegerField(default=0)
+    # Stats
     total_bids = models.PositiveIntegerField(default=0)
     total_wins = models.PositiveIntegerField(default=0)
     total_listings = models.PositiveIntegerField(default=0)
@@ -110,17 +96,15 @@ class User(AbstractUser):
 
     @property
     def is_plan_active(self):
-        if self.plan == self.PLAN_FREE:
-            return True
-        return self.plan_expiry and self.plan_expiry > timezone.now()
+        return True
 
     @property
     def can_early_access(self):
-        return self.plan in [self.PLAN_GOLD, self.PLAN_PLATINUM] and self.is_plan_active
+        return True
 
     @property
     def has_analytics(self):
-        return self.plan in [self.PLAN_SILVER, self.PLAN_GOLD, self.PLAN_PLATINUM]
+        return self.is_staff
 
     def get_seller_badge(self):
         if self.is_verified_seller:
@@ -153,24 +137,6 @@ class SavedSearch(models.Model):
     def __str__(self):
         return f"{self.user.email} - {self.name}"
 
-
-class SubscriptionPayment(models.Model):
-    """Track subscription plan payments"""
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='subscription_payments')
-    plan = models.CharField(max_length=20)
-    amount_ghs = models.DecimalField(max_digits=10, decimal_places=2)
-    paystack_reference = models.CharField(max_length=100, unique=True)
-    status = models.CharField(
-        max_length=20,
-        choices=[('pending', 'Pending'), ('success', 'Success'), ('failed', 'Failed')],
-        default='pending'
-    )
-    valid_from = models.DateTimeField()
-    valid_until = models.DateTimeField()
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        db_table = 'gh_subscription_payments'
 
 
 class SellerReview(models.Model):

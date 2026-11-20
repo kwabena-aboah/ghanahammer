@@ -167,13 +167,17 @@ class AuctionBiddingConsumer(AsyncWebsocketConsumer):
             return {}
 
     @database_sync_to_async
-    def place_bid(self, amount):
+    def place_bid(self, amount, bidder_name='', bidder_email='', bidder_phone='', pickup_notes=''):
         from apps.bidding.services import BiddingService
         service = BiddingService()
         return service.place_bid(
             auction_id=self.auction_id,
-            bidder=self.user,
+            bidder=self.user if self.user and self.user.is_authenticated else None,
             amount=amount,
+            bidder_name=bidder_name,
+            bidder_email=bidder_email,
+            bidder_phone=bidder_phone,
+            pickup_notes=pickup_notes,
             ip_address=self.scope.get('client', [None])[0],
         )
 

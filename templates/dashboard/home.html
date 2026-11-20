@@ -16,10 +16,8 @@
       <p class="text-muted mb-0 small">
         {% if user.is_staff %}
         <span class="badge bg-dark me-2"><i class="bi bi-shield-fill-check text-gold me-1"></i>ADMINISTRATOR</span>
-        {% elif user.plan != 'free' %}
-        <span class="badge gh-plan-badge gh-plan-{{ user.plan }} me-2">{{ user.plan|upper }}</span>
         {% else %}
-        <span class="badge bg-light text-dark border me-2">BIDDER</span>
+        <span class="badge bg-light text-dark border me-2">MEMBER</span>
         {% endif %}
         Member since {{ user.date_joined|date:"M Y" }}
         {% if user.kyc_status == 'verified' %}
@@ -109,21 +107,6 @@
           <div>
             <div class="gh-stat-value text-dark">{{ watchlist_count }}</div>
             <div class="gh-stat-label">Watchlist</div>
-          </div>
-        </div>
-      </a>
-    </div>
-
-    <!-- Bid Credits -->
-    <div class="col-6 col-md-4 col-lg-3">
-      <a href="{% url 'dashboard_subscription' %}" class="text-decoration-none">
-        <div class="gh-stat-card h-100">
-          <div class="gh-stat-icon" style="background:rgba(79,70,229,.12);color:#4f46e5">
-            <i class="bi bi-coin fs-4"></i>
-          </div>
-          <div>
-            <div class="gh-stat-value text-dark">{{ user.bid_credits }}</div>
-            <div class="gh-stat-label">Bid Credits</div>
           </div>
         </div>
       </a>
@@ -300,9 +283,6 @@
           </a>
           <a href="{% url 'dashboard_messages' %}" class="btn btn-outline-secondary text-start">
             <i class="bi bi-chat-dots me-2"></i>Messages Inbox
-          </a>
-          <a href="{% url 'dashboard_subscription' %}" class="btn btn-outline-secondary text-start">
-            <i class="bi bi-coin me-2"></i>Bid Credits ({{ user.bid_credits }})
           </a>
           <a href="{% url 'kyc_overview' %}" class="btn btn-outline-secondary text-start">
             <i class="bi bi-shield-check me-2"></i>KYC Verification

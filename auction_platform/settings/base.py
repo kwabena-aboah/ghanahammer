@@ -114,12 +114,14 @@ WSGI_APPLICATION = 'auction_platform.wsgi.application'
 ASGI_APPLICATION = 'auction_platform.asgi.application'
 
 # Database
+_DEFAULT_DB_URL = f"sqlite:///{BASE_DIR / 'db.sqlite3'}"
 DATABASES = {
     'default': dj_database_url.config(
-        default=config('DATABASE_URL', default=''),
+        default=config('DATABASE_URL', default=_DEFAULT_DB_URL) or _DEFAULT_DB_URL,
         conn_max_age=0 if IS_VERCEL else 600,
     )
 }
+
 
 
 # Channel layers (Redis for WebSocket)
@@ -171,6 +173,7 @@ STORAGES = {
         'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
     },
 }
+WHITENOISE_MANIFEST_STRICT = False
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
@@ -309,12 +312,6 @@ AUCTION_SNIPER_EXTENSION_MINUTES = 5       # Extend auction by 5 mins if bid nea
 AUCTION_SNIPER_THRESHOLD_MINUTES = 5       # Trigger if bid placed within last 5 mins
 AUCTION_MAX_IMAGES_PER_LISTING = 20
 AUCTION_FEATURED_LISTING_PRICE_GHS = 50    # GHS per featured listing
-AUCTION_SUBSCRIPTION_PLANS = {
-    'free': {'price': 0, 'bid_credits': 0, 'features': []},
-    'silver': {'price': 50, 'bid_credits': 100, 'features': ['alerts', 'analytics_basic']},
-    'gold': {'price': 150, 'bid_credits': 500, 'features': ['early_access', 'analytics_full', 'featured_one']},
-    'platinum': {'price': 400, 'bid_credits': -1, 'features': ['all']},
-}
 
 # Escrow & Commission
 PLATFORM_COMMISSION_PERCENT = 5           # 5% platform fee

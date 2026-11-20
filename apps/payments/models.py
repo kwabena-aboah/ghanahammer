@@ -14,15 +14,11 @@ class Payment(models.Model):
     
     TYPE_BID_WIN = 'bid_win'
     TYPE_BUY_NOW = 'buy_now'
-    TYPE_SUBSCRIPTION = 'subscription'
-    TYPE_CREDITS = 'bid_credits'
     TYPE_FEATURED = 'featured_listing'
     TYPE_DEPOSIT = 'deposit'
     TYPE_CHOICES = [
         (TYPE_BID_WIN, 'Auction Win Payment'),
         (TYPE_BUY_NOW, 'Buy Now Payment'),
-        (TYPE_SUBSCRIPTION, 'Subscription Plan'),
-        (TYPE_CREDITS, 'Bid Credits'),
         (TYPE_FEATURED, 'Featured Listing Fee'),
         (TYPE_DEPOSIT, 'Security Deposit'),
     ]

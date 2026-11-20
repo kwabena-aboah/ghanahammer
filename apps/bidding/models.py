@@ -108,37 +108,6 @@ class AutoBid(models.Model):
         return f"AutoBid: {self.bidder.username} max GHS {self.max_amount} on {self.auction.lot_number}"
 
 
-class BidCreditPackage(models.Model):
-    """Purchasable bid credit packs"""
-    name = models.CharField(max_length=100)
-    credits = models.PositiveIntegerField()
-    price_ghs = models.DecimalField(max_digits=10, decimal_places=2)
-    bonus_credits = models.PositiveIntegerField(default=0)
-    is_active = models.BooleanField(default=True)
-    sort_order = models.PositiveIntegerField(default=0)
-
-    class Meta:
-        db_table = 'gh_bid_credit_packages'
-        ordering = ['sort_order']
-
-    def __str__(self):
-        total = self.credits + self.bonus_credits
-        return f"{total} credits for GHS {self.price_ghs}"
-
-
-class BidCreditTransaction(models.Model):
-    """Log of bid credit purchases and usage"""
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='credit_transactions')
-    amount = models.IntegerField(help_text='Positive = credit, Negative = debit')
-    description = models.CharField(max_length=200)
-    bid = models.ForeignKey(Bid, on_delete=models.SET_NULL, null=True, blank=True)
-    package = models.ForeignKey(BidCreditPackage, on_delete=models.SET_NULL, null=True, blank=True)
-    balance_after = models.PositiveIntegerField()
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        db_table = 'gh_credit_transactions'
-
 
 class FraudFlag(models.Model):
     """AI / rule-based fraud detection flags"""

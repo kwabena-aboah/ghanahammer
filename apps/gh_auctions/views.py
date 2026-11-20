@@ -5,6 +5,7 @@ Homepage, listing, detail, create/edit, search, watchlist toggle
 import json
 import logging
 from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.http import JsonResponse, HttpResponseForbidden
@@ -16,7 +17,10 @@ from django.utils import timezone
 from django.core.paginator import Paginator
 from django.utils.dateparse import parse_datetime
 
-from apps.gh_auctions.models import Auction, Category, AuctionImage, Watchlist, AuctionQuestion, BulkImportBatch
+from django import forms
+
+
+from apps.gh_auctions.models import Category, Auction
 from apps.bidding.models import Bid
 
 logger = logging.getLogger(__name__)
@@ -96,7 +100,6 @@ def home(request):
         'total_users': total_users_count,
         'total_volume': int(total_volume),
         'watchlist_ids': watchlist_ids,
-        'plans': settings.AUCTION_SUBSCRIPTION_PLANS,
     })
 
 
@@ -110,9 +113,9 @@ def auction_list(request):
         status__in=['active', 'extended', 'closing', 'preview', 'scheduled']
     ).select_related('category', 'seller').prefetch_related('images')
 
-    # VIP preview: only Gold/Platinum can see preview status
-    if not (request.user.is_authenticated and request.user.can_early_access):
-        qs = qs.exclude(status='preview')
+    # Exclusive preview / VIP auctions: accessible to all signed-in users
+    if not request.user.is_authenticated:
+        qs = qs.exclude(status='preview').exclude(is_vip_only=True)
 
     # ── Filters ──────────────────────────────────────────────────
     q = request.GET.get('q', '').strip()
@@ -217,6 +220,11 @@ def auction_detail(request, slug):
                        .prefetch_related('images', 'documents', 'questions__asker'),
         slug=slug
     )
+
+    # Exclusive auction privileges: preview and VIP auctions are accessible to all signed-in users
+    if (auction.status == 'preview' or auction.is_vip_only) and not request.user.is_authenticated:
+        messages.info(request, "Exclusive auction privileges are accessible to signed-in users. Please sign in to view this auction.")
+        return redirect(f"{reverse('account_login')}?next={request.path}")
 
     # Increment view count (simple, non-unique for now)
     Auction.objects.filter(pk=auction.pk).update(view_count=auction.view_count + 1)

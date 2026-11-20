@@ -1,10 +1,9 @@
 """apps/payments/urls.py"""
 from django.urls import path
-from apps.payments import views, subscription_views
+from apps.payments import views
 
 urlpatterns = [
     path('checkout/<uuid:auction_id>/', views.checkout, name='checkout'),
-    path('subscription-checkout/', subscription_views.subscription_checkout, name='subscription_checkout'),
     path('callback/', views.payment_callback, name='payment_callback'),
     path('momo-otp/', views.momo_otp_submit, name='momo_otp_submit'),
     path('escrow/<uuid:pk>/', views.escrow_detail, name='escrow_detail'),

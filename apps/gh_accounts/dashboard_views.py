@@ -251,24 +251,6 @@ def analytics_redirect(request):
 
 
 @login_required
-def subscription_page(request):
-    """Subscription plan management page"""
-    from apps.bidding.models import BidCreditPackage
-    from apps.payments.models import Payment
-
-    credit_packages = BidCreditPackage.objects.filter(is_active=True).order_by('sort_order')
-    recent_subscriptions = Payment.objects.filter(
-        user=request.user
-    ).order_by('-created_at')[:5] if hasattr(Payment, 'objects') else []
-
-    return render(request, 'dashboard/subscription.html', {
-        'credit_packages': credit_packages,
-        'recent_subscriptions': recent_subscriptions,
-        'plans': settings.AUCTION_SUBSCRIPTION_PLANS,
-    })
-
-
-@login_required
 def saved_searches(request):
     """Manage saved searches / smart alerts"""
     from apps.gh_accounts.models import SavedSearch
